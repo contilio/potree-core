@@ -284,11 +284,9 @@ class Group extends BasicGroup {
       shader = this.shaders.get(material);
     }
 
-    var numSnapshots = material.snapEnabled ? material.numSnapshots : 0;
     var numClippingPlanes = (material.clipping && material.clippingPlanes && material.clippingPlanes.length) ? material.clippingPlanes.length : 0;
 
     var defines = [
-      "#define num_snapshots " + numSnapshots,
       "#define num_clipplanes " + numClippingPlanes,
     ];
 
@@ -395,56 +393,6 @@ class Group extends BasicGroup {
     gl.activeTexture(gl.TEXTURE0 + currentTextureBindingPoint);
     gl.bindTexture(classificationTexture.target, classificationTexture.id);
     currentTextureBindingPoint++;
-
-    if (material.snapEnabled === true) {
-      var lSnapshot = shader.uniformLocations["uSnapshot[0]"];
-      var lSnapshotDepth = shader.uniformLocations["uSnapshotDepth[0]"];
-
-      var bindingStart = currentTextureBindingPoint;
-      var lSnapshotBindingPoints = new Array(5).fill(bindingStart).map((a, i) => (a + i));
-      var lSnapshotDepthBindingPoints = new Array(5).fill(1 + Math.max(...lSnapshotBindingPoints)).map((a, i) => (a + i));
-      currentTextureBindingPoint = 1 + Math.max(...lSnapshotDepthBindingPoints);
-
-      gl.uniform1iv(lSnapshot, lSnapshotBindingPoints);
-      gl.uniform1iv(lSnapshotDepth, lSnapshotDepthBindingPoints);
-
-      for (var i = 0; i < 5; i++) {
-        var texture = material.uniforms["uSnapshot"].value[i];
-        var textureDepth = material.uniforms["uSnapshotDepth"].value[i];
-
-        if (!texture) {
-          break;
-        }
-
-        var snapTexture = renderer.properties.get(texture).__webglTexture;
-        var snapTextureDepth = renderer.properties.get(textureDepth).__webglTexture;
-
-        var bindingPoint = lSnapshotBindingPoints[i];
-        var depthBindingPoint = lSnapshotDepthBindingPoints[i];
-
-        gl.activeTexture(gl[`TEXTURE${bindingPoint}`]);
-        gl.bindTexture(gl.TEXTURE_2D, snapTexture);
-
-        gl.activeTexture(gl[`TEXTURE${depthBindingPoint}`]);
-        gl.bindTexture(gl.TEXTURE_2D, snapTextureDepth);
-      }
-
-      var flattenedMatrices = [].concat(...material.uniforms.uSnapView.value.map(c => c.elements));
-      var lSnapView = shader.uniformLocations["uSnapView[0]"];
-      gl.uniformMatrix4fv(lSnapView, false, flattenedMatrices);
-
-      flattenedMatrices = [].concat(...material.uniforms.uSnapProj.value.map(c => c.elements));
-      var lSnapProj = shader.uniformLocations["uSnapProj[0]"];
-      gl.uniformMatrix4fv(lSnapProj, false, flattenedMatrices);
-
-      flattenedMatrices = [].concat(...material.uniforms.uSnapProjInv.value.map(c => c.elements));
-      var lSnapProjInv = shader.uniformLocations["uSnapProjInv[0]"];
-      gl.uniformMatrix4fv(lSnapProjInv, false, flattenedMatrices);
-
-      flattenedMatrices = [].concat(...material.uniforms.uSnapViewInv.value.map(c => c.elements));
-      var lSnapViewInv = shader.uniformLocations["uSnapViewInv[0]"];
-      gl.uniformMatrix4fv(lSnapViewInv, false, flattenedMatrices);
-    }
 
     this.renderNodes(renderer, octree, nodes, visibilityTextureData, camera, shader);
 

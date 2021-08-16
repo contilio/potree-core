@@ -41,8 +41,6 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 		this._gradient = Gradients.SPECTRAL;
 		this._treeType = treeType;
 		this._useEDL = false;
-		this._snapEnabled = false;
-		this._numSnapshots = 0;
 		this._defaultIntensityRangeChanged = false;
 		this._defaultElevationRangeChanged = false;
 
@@ -231,11 +229,6 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 			defines.push("#define use_edl");
 		}
 
-		if(this._snapEnabled)
-		{
-			defines.push("#define snap_enabled");
-		}
-
 		if(this._pointColorType === PointColorType.RGB)
 		{
 			defines.push("#define color_type_rgb");
@@ -392,30 +385,6 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 			type: "material_property_changed",
 			target: this
 		});
-	}
-
-	get numSnapshots()
-	{
-		return this._numSnapshots;
-	}
-	
-	set numSnapshots(value)
-	{
-		this._numSnapshots = value;
-	}
-
-	get snapEnabled()
-	{
-		return this._snapEnabled;
-	}
-	
-	set snapEnabled(value)
-	{
-		if(this._snapEnabled !== value)
-		{
-			this._snapEnabled = value;
-			this.updateShaderSource();
-		}
 	}
 
 	get spacing()
