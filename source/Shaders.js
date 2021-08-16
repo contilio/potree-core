@@ -9,8 +9,6 @@ Shaders.vertex = `
 precision highp float;
 precision highp int;
 
-#define MAX_CLIP_POLYGONS 8
-
 ` + THREE.ShaderChunk.common + `
 ` + THREE.ShaderChunk.logdepthbuf_pars_vertex + `
 
@@ -38,26 +36,6 @@ uniform float near;
 uniform float far;
 
 uniform bool uDebug;
-
-#define CLIPTASK_HIGHLIGHT 1
-#define CLIPTASK_SHOW_INSIDE 2
-#define CLIPTASK_SHOW_OUTSIDE 3
-
-#define CLIPMETHOD_INSIDE_ANY 0
-#define CLIPMETHOD_INSIDE_ALL 1
-
-uniform int clipTask;
-uniform int clipMethod;
-
-#if defined(num_clipboxes) && num_clipboxes > 0
-	uniform mat4 clipBoxes[num_clipboxes];
-#endif
-
-#if defined(num_clippolygons) && num_clippolygons > 0
-	uniform int uClipPolygonVCount[num_clippolygons];
-	uniform vec3 uClipPolygonVertices[num_clippolygons * 8];
-	uniform mat4 uClipPolygonWVP[num_clippolygons];
-#endif
 
 uniform float size;
 uniform float minSize;
@@ -576,111 +554,6 @@ float getPointSize()
 	return pointSize;
 }
 
-#if defined num_clippolygons && num_clippolygons > 0
-	bool pointInClipPolygon(vec3 point, int polyIdx)
-	{
-		mat4 wvp = uClipPolygonWVP[polyIdx];
-
-		vec4 pointNDC = wvp * vec4(point, 1.0);
-		pointNDC.xy = pointNDC.xy / pointNDC.w;
-
-		int j = uClipPolygonVCount[polyIdx] - 1;
-		bool c = false;
-		for(int i = 0; i < 8; i++)
-		{
-			if(i == uClipPolygonVCount[polyIdx])
-			{
-				break;
-			}
-
-			vec3 verti = uClipPolygonVertices[polyIdx * 8 + i];
-			vec3 vertj = uClipPolygonVertices[polyIdx * 8 + j];
-
-			if(((verti.y > pointNDC.y) != (vertj.y > pointNDC.y)) && (pointNDC.x < (vertj.x-verti.x) * (pointNDC.y-verti.y) / (vertj.y-verti.y) + verti.x))
-			{
-				c = !c;
-			}
-
-			j = i;
-		}
-
-		return c;
-	}
-#endif
-
-void doClipping()
-{
-	#if !defined color_type_composite
-		vec4 cl = getClassification(); 
-		if(cl.a == 0.0)
-		{
-			gl_Position = vec4(100.0, 100.0, 100.0, 0.0);
-			
-			return;
-		}
-	#endif
-
-	int clipVolumesCount = 0;
-	int insideCount = 0;
-
-	#if defined(num_clipboxes) && num_clipboxes > 0
-		for(int i = 0; i < num_clipboxes; i++)
-		{
-			vec4 clipPosition = clipBoxes[i] * modelMatrix * vec4( position, 1.0 );
-			bool inside = -0.5 <= clipPosition.x && clipPosition.x <= 0.5;
-			inside = inside && -0.5 <= clipPosition.y && clipPosition.y <= 0.5;
-			inside = inside && -0.5 <= clipPosition.z && clipPosition.z <= 0.5;
-
-			insideCount = insideCount + (inside ? 1 : 0);
-			clipVolumesCount++;
-		}	
-	#endif
-
-	#if defined(num_clippolygons) && num_clippolygons > 0
-		for(int i = 0; i < num_clippolygons; i++)
-		{
-			bool inside = pointInClipPolygon(position, i);
-
-			insideCount = insideCount + (inside ? 1 : 0);
-			clipVolumesCount++;
-		}
-	#endif
-
-	bool insideAny = insideCount > 0;
-	bool insideAll = (clipVolumesCount > 0) && (clipVolumesCount == insideCount);
-
-	if(clipMethod == CLIPMETHOD_INSIDE_ANY)
-	{
-		if(insideAny && clipTask == CLIPTASK_HIGHLIGHT)
-		{
-			vColor.r += 0.5;
-		}
-		else if(!insideAny && clipTask == CLIPTASK_SHOW_INSIDE)
-		{
-			gl_Position = vec4(100.0, 100.0, 100.0, 1.0);
-		}
-		else if(insideAny && clipTask == CLIPTASK_SHOW_OUTSIDE)
-		{
-			gl_Position = vec4(100.0, 100.0, 100.0, 1.0);
-		}
-	}
-	else if(clipMethod == CLIPMETHOD_INSIDE_ALL)
-	{
-		if(insideAll && clipTask == CLIPTASK_HIGHLIGHT)
-		{
-			vColor.r += 0.5;
-		}
-		else if(!insideAll && clipTask == CLIPTASK_SHOW_INSIDE)
-		{
-			gl_Position = vec4(100.0, 100.0, 100.0, 1.0);
-		}
-		else if(insideAll && clipTask == CLIPTASK_SHOW_OUTSIDE)
-		{
-			gl_Position = vec4(100.0, 100.0, 100.0, 1.0);
-		}
-	}
-}
-
 void main()
 {
 	vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
@@ -707,12 +580,11 @@ void main()
 		gl_Position = projectionMatrix * mvPosition;
 	#endif
 
-	//CLIPPING
+	// CLIPPING
 	vec4 clipPosition = modelMatrix * vec4( position, 1.0 );
 	if (isClipped(clipPosition.xyz)) {
-		gl_Position = vec4(100.0, 100.0, 100.0, 1.0); // Outside clip space
+		gl_Position = vec4(100.0, 100.0, 100.0, 1.0); // Outside clip volume
 	} 
-	doClipping();
 }`;
 
 //"pointcloud.fs"

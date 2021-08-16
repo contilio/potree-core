@@ -7,7 +7,7 @@ import { BasicGroup } from "./BasicGroup.js";
 import { PointCloudTree } from "../pointcloud/PointCloudTree.js";
 import { PointCloudOctreeNode } from "../pointcloud/PointCloudOctree.js";
 import { PointCloudArena4DNode } from "../pointcloud/PointCloudArena4D.js";
-import { AttributeLocations, PointSizeType, PointColorType, ClipTask } from "../Potree.js";
+import { AttributeLocations, PointSizeType, PointColorType } from "../Potree.js";
 import { Global } from "../Global.js";
 import { Shader } from "../Shader.js";
 import { WebGLTexture } from "../WebGLTexture.js";
@@ -228,44 +228,6 @@ class Group extends BasicGroup {
         gl.uniform4fv(clipPlanesLoc, flattenedPlanes);
       }
 
-      //Clip Polygons
-      if (material.clipPolygons && material.clipPolygons.length > 0) {
-        var clipPolygonVCount = [];
-        var worldViewProjMatrices = [];
-
-        for (var clipPolygon of material.clipPolygons) {
-          var view = clipPolygon.viewMatrix;
-          var proj = clipPolygon.projMatrix;
-
-          var worldViewProj = proj.clone().multiply(view).multiply(world);
-
-          clipPolygonVCount.push(clipPolygon.markers.length);
-          worldViewProjMatrices.push(worldViewProj);
-        }
-
-        var flattenedMatrices = [].concat(...worldViewProjMatrices.map(m => m.elements));
-
-        var flattenedVertices = new Array(8 * 3 * material.clipPolygons.length);
-        for (var i = 0; i < material.clipPolygons.length; i++) {
-          var clipPolygon = material.clipPolygons[i];
-
-          for (var j = 0; j < clipPolygon.markers.length; j++) {
-            flattenedVertices[i * 24 + (j * 3 + 0)] = clipPolygon.markers[j].position.x;
-            flattenedVertices[i * 24 + (j * 3 + 1)] = clipPolygon.markers[j].position.y;
-            flattenedVertices[i * 24 + (j * 3 + 2)] = clipPolygon.markers[j].position.z;
-          }
-        }
-
-        var lClipPolygonVCount = shader.uniformLocations["uClipPolygonVCount[0]"];
-        gl.uniform1iv(lClipPolygonVCount, clipPolygonVCount);
-
-        var lClipPolygonVP = shader.uniformLocations["uClipPolygonWVP[0]"];
-        gl.uniformMatrix4fv(lClipPolygonVP, false, flattenedMatrices);
-
-        var lClipPolygons = shader.uniformLocations["uClipPolygonVertices[0]"];
-        gl.uniform3fv(lClipPolygons, flattenedVertices);
-      }
-
       shader.setUniform1f("uLevel", level);
       shader.setUniform1f("uNodeSpacing", node.geometryNode.estimatedSpacing);
       shader.setUniform1f("uPCIndex", i);
@@ -323,14 +285,10 @@ class Group extends BasicGroup {
     }
 
     var numSnapshots = material.snapEnabled ? material.numSnapshots : 0;
-    var numClipBoxes = (material.clipBoxes && material.clipBoxes.length) ? material.clipBoxes.length : 0;
-    var numClipPolygons = (material.clipPolygons && material.clipPolygons.length) ? material.clipPolygons.length : 0;
     var numClippingPlanes = (material.clipping && material.clippingPlanes && material.clippingPlanes.length) ? material.clippingPlanes.length : 0;
 
     var defines = [
       "#define num_snapshots " + numSnapshots,
-      "#define num_clipboxes " + numClipBoxes,
-      "#define num_clippolygons " + numClipPolygons,
       "#define num_clipplanes " + numClippingPlanes,
     ];
 
@@ -396,43 +354,6 @@ class Group extends BasicGroup {
       shader.setUniform("logDepthBufFC", 2.0 / (Math.log(camera.far + 1.0) / Math.LN2));
     }
 
-    //Clip task
-    if (material.clipBoxes.length + material.clipPolygons.length === 0) {
-      shader.setUniform1i("clipTask", ClipTask.NONE);
-    }
-    else {
-      shader.setUniform1i("clipTask", material.clipTask);
-    }
-
-    shader.setUniform1i("clipMethod", material.clipMethod);
-
-    //Clipboxes
-    if (material.clipBoxes && material.clipBoxes.length > 0) {
-      var lClipBoxes = shader.uniformLocations["clipBoxes[0]"];
-      gl.uniformMatrix4fv(lClipBoxes, false, material.uniforms.clipBoxes.value);
-    }
-
-    //Clispheres
-    /*if(material.clipSpheres && material.clipSpheres.length > 0)
-    {
-      var clipSpheres = material.clipSpheres;
-      var matrices = [];
-      for(var clipSphere of clipSpheres)
-      {
-        var clipToWorld = clipSphere.matrixWorld;
-        var viewToWorld = camera.matrixWorld
-        var worldToClip = new THREE.Matrix4().getInverse(clipToWorld);
-
-        var viewToClip = new THREE.Matrix4().multiplyMatrices(worldToClip, viewToWorld);
-
-        matrices.push(viewToClip);
-      }
-
-      var flattenedMatrices = [].concat(...matrices.map(matrix => matrix.elements));
-
-      var lClipSpheres = shader.uniformLocations["uClipSpheres[0]"];
-      gl.uniformMatrix4fv(lClipSpheres, false, flattenedMatrices);
-    }*/
 
     shader.setUniform1f("size", material.size);
     shader.setUniform1f("maxSize", material.uniforms.maxSize.value);

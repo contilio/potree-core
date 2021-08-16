@@ -5,8 +5,6 @@ export {Global} from "./Global.js";
 export {
 	AttributeLocations,
 	Classification,
-	ClipTask,
-	ClipMethod,
 	PointSizeType,
 	PointShape,
 	PointColorType,

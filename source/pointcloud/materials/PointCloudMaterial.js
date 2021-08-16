@@ -37,7 +37,6 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 		this._pointSizeType = PointSizeType.FIXED;
 		this._shape = PointShape.SQUARE;
 		this._pointColorType = PointColorType.RGB;
-		this._useClipBox = false;
 		this._weighted = false;
 		this._gradient = Gradients.SPECTRAL;
 		this._treeType = treeType;
@@ -47,9 +46,6 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 		this._defaultIntensityRangeChanged = false;
 		this._defaultElevationRangeChanged = false;
 
-		this.clipBoxes = [];
-		this.clipPolygons = [];
-		
 		this.gradientTexture = PointCloudMaterial.generateGradientTexture(this._gradient);
 		this.lights = false;
 		this.fog = false;
@@ -89,15 +85,6 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 			bbSize: {type: "fv", value: [0, 0, 0]},
 			elevationRange: {type: "2fv", value: [0, 0]},
 
-			clipBoxCount: {type: "f", value: 0},
-			//clipSphereCount: {type: "f", value: 0},
-			clipPolygonCount: {type: "i", value: 0},
-			clipBoxes: {type: "Matrix4fv", value: []},
-			//clipSpheres: {type: "Matrix4fv", value: []},
-			clipPolygons: {type: "3fv", value: []},
-			clipPolygonVCount: {type: "iv", value: []},
-			clipPolygonVP: {type: "Matrix4fv", value: []},
-
 			visibleNodes: {type: "t", value: this.visibleNodesTexture},
 			pcIndex: {type: "f", value: 0},
 			gradient: {type: "t", value: this.gradientTexture},
@@ -120,8 +107,6 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 			wReturnNumber: {type: "f", value: 0},
 			wSourceID: {type: "f", value: 0},
 			useOrthographicCamera: {type: "b", value: false},
-			clipTask: {type: "i", value: 1},
-			clipMethod: {type: "i", value: 1},
 			uSnapshot: {type: "tv", value: []},
 			uSnapshotDepth: {type: "tv", value: []},
 			uSnapView: {type: "Matrix4fv", value: []},
@@ -335,53 +320,6 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 		return defines.join("\n");
 	}
 
-	setClipBoxes(clipBoxes)
-	{
-		if(!clipBoxes)
-		{
-			return;
-		}
-
-		var doUpdate = (this.clipBoxes.length !== clipBoxes.length) && (clipBoxes.length === 0 || this.clipBoxes.length === 0);
-		this.uniforms.clipBoxCount.value = this.clipBoxes.length;
-		this.clipBoxes = clipBoxes;
-
-		if(doUpdate)
-		{
-			this.updateShaderSource();
-		}
-
-		this.uniforms.clipBoxes.value = new Float32Array(this.clipBoxes.length * 16);
-		
-		for(var i = 0; i < this.clipBoxes.length; i++)
-		{
-			var box = clipBoxes[i];
-			this.uniforms.clipBoxes.value.set(box.inverse.elements, 16 * i);
-		}
-
-		for(var i = 0; i < this.uniforms.clipBoxes.value.length; i++)
-		{
-			if(Number.isNaN(this.uniforms.clipBoxes.value[i]))
-			{
-				this.uniforms.clipBoxes.value[i] = Infinity;
-			}
-		}
-	}
-
-	setClipPolygons(clipPolygons, maxPolygonVertices)
-	{
-		if(!clipPolygons)
-		{
-			return;
-		}
-		this.clipPolygons = clipPolygons;
-		var doUpdate = (this.clipPolygons.length !== clipPolygons.length);
-		if(doUpdate)
-		{
-			this.updateShaderSource();
-		}
-	}
-
 	get gradient()
 	{
 		return this._gradient;
@@ -491,40 +429,6 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 		{
 			this.uniforms.spacing.value = value;
 		}
-	}
-
-	get useClipBox()
-	{
-		return this._useClipBox;
-	}
-	
-	set useClipBox(value)
-	{
-		if(this._useClipBox !== value)
-		{
-			this._useClipBox = value;
-			this.updateShaderSource();
-		}
-	}
-
-	get clipTask()
-	{
-		return this.uniforms.clipTask.value;
-	}
-	
-	set clipTask(mode)
-	{
-		this.uniforms.clipTask.value = mode;
-	}
-
-	get clipMethod()
-	{
-		return this.uniforms.clipMethod.value;
-	}
-	
-	set clipMethod(mode)
-	{
-		this.uniforms.clipMethod.value = mode;
 	}
 
 	get weighted()
