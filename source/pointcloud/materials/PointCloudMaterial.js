@@ -87,7 +87,6 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 			pcIndex: {type: "f", value: 0},
 			gradient: {type: "t", value: this.gradientTexture},
 			classificationLUT: {type: "t", value: this.classificationTexture},
-			toModel: {type: "Matrix4f", value: []},
 			diffuse: {type: "fv", value: [1, 1, 1]},
 			transition: {type: "f", value: 0.5},
 			intensityRange: {type: "fv", value: [0, 65000]},
