@@ -104,13 +104,7 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 			wClassification: {type: "f", value: 0},
 			wReturnNumber: {type: "f", value: 0},
 			wSourceID: {type: "f", value: 0},
-			useOrthographicCamera: {type: "b", value: false},
-			uSnapshot: {type: "tv", value: []},
-			uSnapshotDepth: {type: "tv", value: []},
-			uSnapView: {type: "Matrix4fv", value: []},
-			uSnapProj: {type: "Matrix4fv", value: []},
-			uSnapProjInv: {type: "Matrix4fv", value: []},
-			uSnapViewInv: {type: "Matrix4fv", value: []}
+			useOrthographicCamera: {type: "b", value: false}
 		};
 		
 		this.classification = Classification.DEFAULT;
