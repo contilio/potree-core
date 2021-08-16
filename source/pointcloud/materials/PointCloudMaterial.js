@@ -103,8 +103,7 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 			wElevation: {type: "f", value: 0},
 			wClassification: {type: "f", value: 0},
 			wReturnNumber: {type: "f", value: 0},
-			wSourceID: {type: "f", value: 0},
-			useOrthographicCamera: {type: "b", value: false}
+			wSourceID: {type: "f", value: 0}
 		};
 		
 		this.classification = Classification.DEFAULT;
@@ -314,19 +313,6 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 			this._gradient = value;
 			this.gradientTexture = PointCloudMaterial.generateGradientTexture(this._gradient);
 			this.uniforms.gradient.value = this.gradientTexture;
-		}
-	}
-
-	get useOrthographicCamera()
-	{
-		return this.uniforms.useOrthographicCamera.value;
-	}
-	
-	set useOrthographicCamera(value)
-	{
-		if(this.uniforms.useOrthographicCamera.value !== value)
-		{
-			this.uniforms.useOrthographicCamera.value = value;
 		}
 	}
 
