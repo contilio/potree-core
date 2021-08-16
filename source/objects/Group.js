@@ -435,16 +435,6 @@ class Group extends BasicGroup {
       shader.setUniform("logDepthBufFC", 2.0 / (Math.log(camera.far + 1.0) / Math.LN2));
     }
 
-    //Camera configuration
-    if (camera instanceof THREE.OrthographicCamera) {
-      shader.setUniform("uUseOrthographicCamera", true);
-      shader.setUniform("uOrthoWidth", camera.right - camera.left);
-      shader.setUniform("uOrthoHeight", camera.top - camera.bottom);
-    }
-    else {
-      shader.setUniform("uUseOrthographicCamera", false);
-    }
-
     //Clip task
     if (material.clipBoxes.length + material.clipPolygons.length === 0) {
       shader.setUniform1i("clipTask", ClipTask.NONE);

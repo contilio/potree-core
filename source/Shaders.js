@@ -32,18 +32,12 @@ uniform mat4 uViewInv;
 
 uniform float uScreenWidth;
 uniform float uScreenHeight;
-// #define uScreenWidth 1107.0
-// #define uScreenHeight 774.0
 
 uniform float fov;
 uniform float near;
 uniform float far;
 
 uniform bool uDebug;
-
-uniform bool uUseOrthographicCamera;
-uniform float uOrthoWidth;
-uniform float uOrthoHeight;
 
 #define CLIPTASK_NONE 0
 #define CLIPTASK_HIGHLIGHT 1
@@ -572,31 +566,16 @@ float getPointSize()
 	#if defined fixed_point_size
 		pointSize = size;
 	#elif defined attenuated_point_size
-		if(uUseOrthographicCamera)
-		{
-			pointSize = size;
-		}
-		else
+		pointSize = size * spacing * projFactor;
+	#elif defined adaptive_point_size
+		if(uIsLeafNode && false)
 		{
 			pointSize = size * spacing * projFactor;
 		}
-	#elif defined adaptive_point_size
-		if(uUseOrthographicCamera)
-		{
-			float worldSpaceSize = 1.0 * size * r / getPointSizeAttenuation();
-			pointSize = (worldSpaceSize / uOrthoWidth) * uScreenWidth;
-		}
 		else
 		{
-			if(uIsLeafNode && false)
-			{
-				pointSize = size * spacing * projFactor;
-			}
-			else
-			{
-				float worldSpaceSize = 1.0 * size * r / getPointSizeAttenuation();
-				pointSize = worldSpaceSize * projFactor;
-			}
+			float worldSpaceSize = 1.0 * size * r / getPointSizeAttenuation();
+			pointSize = worldSpaceSize * projFactor;
 		}
 	#endif
 
