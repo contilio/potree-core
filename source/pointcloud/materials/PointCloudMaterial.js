@@ -40,7 +40,6 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 		this._weighted = false;
 		this._gradient = Gradients.SPECTRAL;
 		this._treeType = treeType;
-		this._useEDL = false;
 		this._defaultIntensityRangeChanged = false;
 		this._defaultElevationRangeChanged = false;
 
@@ -148,7 +147,7 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 			this.depthWrite = true;
 			this.depthFunc = THREE.LessEqualDepth;
 		}
-		else if(this.opacity < 1.0 && !this.useEDL)
+		else
 		{
 			this.blending = THREE.AdditiveBlending;
 			this.transparent = true;
@@ -206,11 +205,6 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 		else if(this.shape === PointShape.PARABOLOID)
 		{
 			defines.push("#define paraboloid_point_shape");
-		}
-
-		if(this._useEDL)
-		{
-			defines.push("#define use_edl");
 		}
 
 		if(this._pointColorType === PointColorType.RGB)
@@ -525,20 +519,6 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 				type: "material_property_changed",
 				target: this
 			});
-		}
-	}
-
-	get useEDL()
-	{
-		return this._useEDL;
-	}
-	
-	set useEDL(value)
-	{
-		if(this._useEDL !== value)
-		{
-			this._useEDL = value;
-			this.updateShaderSource();
 		}
 	}
 
