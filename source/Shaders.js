@@ -606,7 +606,6 @@ uniform vec3 cameraPosition;
 uniform mat4 projectionMatrix;
 uniform float uOpacity;
 
-uniform float blendHardness;
 uniform float blendDepthSupplement;
 uniform float fov;
 uniform float uSpacing;

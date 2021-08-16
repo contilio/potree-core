@@ -67,7 +67,6 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 			level: {type: "f", value: 0.0},
 			vnStart: {type: "f", value: 0.0},
 			spacing: {type: "f", value: 1.0},
-			blendHardness: {type: "f", value: 2.0},
 			blendDepthSupplement:	{type: "f", value: 0.0},
 			fov: {type: "f", value: 1.0},
 			screenWidth: {type: "f", value: 1.0},
