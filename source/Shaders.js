@@ -53,10 +53,6 @@ uniform int clipMethod;
 	uniform mat4 clipBoxes[num_clipboxes];
 #endif
 
-#if defined(num_clipspheres) && num_clipspheres > 0
-	uniform mat4 uClipSpheres[num_clipspheres];
-#endif
-
 #if defined(num_clippolygons) && num_clippolygons > 0
 	uniform int uClipPolygonVCount[num_clippolygons];
 	uniform vec3 uClipPolygonVertices[num_clippolygons * 8];
@@ -717,23 +713,6 @@ void main()
 		gl_Position = vec4(100.0, 100.0, 100.0, 1.0); // Outside clip space
 	} 
 	doClipping();
-
-	#if defined num_clipspheres && num_clipspheres > 0
-		for(int i = 0; i < num_clipspheres; i++)
-		{
-			vec4 sphereLocal = uClipSpheres[i] * mvPosition;
-
-			float distance = length(sphereLocal.xyz);
-
-			if(distance < 1.0)
-			{
-				float w = distance;
-				vec3 cGradient = texture2D(gradient, vec2(w, 1.0 - w)).rgb;
-				
-				vColor = cGradient;
-			}
-		}
-	#endif
 }`;
 
 //"pointcloud.fs"

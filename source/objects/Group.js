@@ -325,13 +325,11 @@ class Group extends BasicGroup {
     var numSnapshots = material.snapEnabled ? material.numSnapshots : 0;
     var numClipBoxes = (material.clipBoxes && material.clipBoxes.length) ? material.clipBoxes.length : 0;
     var numClipPolygons = (material.clipPolygons && material.clipPolygons.length) ? material.clipPolygons.length : 0;
-    var numClipSpheres = 0;
     var numClippingPlanes = (material.clipping && material.clippingPlanes && material.clippingPlanes.length) ? material.clippingPlanes.length : 0;
 
     var defines = [
       "#define num_snapshots " + numSnapshots,
       "#define num_clipboxes " + numClipBoxes,
-      "#define num_clipspheres " + numClipSpheres,
       "#define num_clippolygons " + numClipPolygons,
       "#define num_clipplanes " + numClippingPlanes,
     ];
