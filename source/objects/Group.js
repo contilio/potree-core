@@ -167,7 +167,6 @@ class Group extends BasicGroup {
   renderNodes(renderer, octree, nodes, visibilityTextureData, camera, shader) {
     var gl = renderer.getContext();
     var material = octree.material;
-    var shadowMaps = [];
     var view = camera.matrixWorldInverse;
 
     var worldView = new THREE.Matrix4();
@@ -271,39 +270,6 @@ class Group extends BasicGroup {
       shader.setUniform1f("uNodeSpacing", node.geometryNode.estimatedSpacing);
       shader.setUniform1f("uPCIndex", i);
 
-      /*
-      if(shadowMaps.length > 0)
-      {
-        var lShadowMap = shader.uniformLocations["uShadowMap[0]"];
-
-        shader.setUniform3f("uShadowColor", material.uniforms.uShadowColor.value);
-
-        var bindingStart = 5;
-        var bindingPoints = new Array(shadowMaps.length).fill(bindingStart).map((a, i) => (a + i));
-        gl.uniform1iv(lShadowMap, bindingPoints);
-
-        for(var i = 0; i < shadowMaps.length; i++)
-        {
-          var shadowMap = shadowMaps[i];
-          var bindingPoint = bindingPoints[i];
-          var glTexture = renderer.properties.get(shadowMap.target.texture).__webglTexture;
-
-          gl.activeTexture(gl[`TEXTURE${bindingPoint}`]);
-          gl.bindTexture(gl.TEXTURE_2D, glTexture);
-        }
-
-        var worldViewMatrices = shadowMaps.map(sm => sm.camera.matrixWorldInverse).map(view => new THREE.Matrix4().multiplyMatrices(view, world))
-
-        var flattenedMatrices = [].concat(...worldViewMatrices.map(c => c.elements));
-        var lWorldView = shader.uniformLocations["uShadowWorldView[0]"];
-        gl.uniformMatrix4fv(lWorldView, false, flattenedMatrices);
-
-        flattenedMatrices = [].concat(...shadowMaps.map(sm => sm.camera.projectionMatrix.elements));
-        var lProj = shader.uniformLocations["uShadowProj[0]"];
-        gl.uniformMatrix4fv(lProj, false, flattenedMatrices);
-      }
-      */
-
       var geometry = node.geometryNode.geometry;
       var webglBuffer = null;
       if (!this.buffers.has(geometry)) {
@@ -330,12 +296,10 @@ class Group extends BasicGroup {
   renderOctree(renderer, octree, nodes, camera) {
     var gl = renderer.getContext();
     var material = octree.material;
-    var shadowMaps = [];
     var view = camera.matrixWorldInverse;
     var viewInv = camera.matrixWorld;
     var proj = camera.projectionMatrix;
     var projInv = proj.clone().invert();
-    var worldView = new THREE.Matrix4();
 
     var visibilityTextureData = null;
     var currentTextureBindingPoint = 0;
@@ -365,7 +329,6 @@ class Group extends BasicGroup {
     var numClippingPlanes = (material.clipping && material.clippingPlanes && material.clippingPlanes.length) ? material.clippingPlanes.length : 0;
 
     var defines = [
-      "#define num_shadowmaps " + shadowMaps.length,
       "#define num_snapshots " + numSnapshots,
       "#define num_clipboxes " + numClipBoxes,
       "#define num_clipspheres " + numClipSpheres,

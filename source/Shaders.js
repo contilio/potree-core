@@ -39,7 +39,6 @@ uniform float far;
 
 uniform bool uDebug;
 
-#define CLIPTASK_NONE 0
 #define CLIPTASK_HIGHLIGHT 1
 #define CLIPTASK_SHOW_INSIDE 2
 #define CLIPTASK_SHOW_OUTSIDE 3
@@ -121,12 +120,6 @@ bool isClipped(vec3 point) {
 	return false;
 }
 
-#endif
-
-#if defined(num_shadowmaps) && num_shadowmaps > 0
-	uniform sampler2D uShadowMap[num_shadowmaps];
-	uniform mat4 uShadowWorldView[num_shadowmaps];
-	uniform mat4 uShadowProj[num_shadowmaps];
 #endif
 
 varying vec3 vColor;
@@ -740,69 +733,6 @@ void main()
 				vColor = cGradient;
 			}
 		}
-	#endif
-
-	#if defined num_shadowmaps && num_shadowmaps > 0
-
-		const float sm_near = 0.1;
-		const float sm_far = 10000.0;
-
-		for(int i = 0; i < num_shadowmaps; i++)
-		{
-			vec3 viewPos = (uShadowWorldView[i] * vec4(position, 1.0)).xyz;
-			float distanceToLight = abs(viewPos.z);
-			
-			vec4 projPos = uShadowProj[i] * uShadowWorldView[i] * vec4(position, 1);
-			vec3 nc = projPos.xyz / projPos.w;
-			
-			float u = nc.x * 0.5 + 0.5;
-			float v = nc.y * 0.5 + 0.5;
-
-			vec2 sampleStep = vec2(1.0 / (2.0*1024.0), 1.0 / (2.0*1024.0)) * 1.5;
-			vec2 sampleLocations[9];
-
-			sampleLocations[0] = vec2(0.0, 0.0);
-			sampleLocations[1] = sampleStep;
-			sampleLocations[2] = -sampleStep;
-			sampleLocations[3] = vec2(sampleStep.x, -sampleStep.y);
-			sampleLocations[4] = vec2(-sampleStep.x, sampleStep.y);
-			sampleLocations[5] = vec2(0.0, sampleStep.y);
-			sampleLocations[6] = vec2(0.0, -sampleStep.y);
-			sampleLocations[7] = vec2(sampleStep.x, 0.0);
-			sampleLocations[8] = vec2(-sampleStep.x, 0.0);
-
-			float visibleSamples = 0.0;
-			float numSamples = 0.0;
-
-			float bias = vRadius * 2.0;
-
-			for(int j = 0; j < 9; j++)
-			{
-				vec4 depthMapValue = texture2D(uShadowMap[i], vec2(u, v) + sampleLocations[j]);
-
-				float linearDepthFromSM = depthMapValue.x + bias;
-				float linearDepthFromViewer = distanceToLight;
-
-				if(linearDepthFromSM > linearDepthFromViewer)
-				{
-					visibleSamples += 1.0;
-				}
-
-				numSamples += 1.0;
-			}
-
-			float visibility = visibleSamples / numSamples;
-
-			if(u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0 || nc.x < -1.0 || nc.x > 1.0 || nc.y < -1.0 || nc.y > 1.0 || nc.z < -1.0 || nc.z > 1.0)
-			{
-				//vColor = vec3(0.0, 0.0, 0.2);
-			}
-			else
-			{
-				vColor = vColor * visibility + vColor * uShadowColor * (1.0 - visibility);
-			}
-		}
-
 	#endif
 }`;
 
