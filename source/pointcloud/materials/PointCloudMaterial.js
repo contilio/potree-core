@@ -110,8 +110,7 @@ class PointCloudMaterial extends THREE.RawShaderMaterial
 			uSnapView: {type: "Matrix4fv", value: []},
 			uSnapProj: {type: "Matrix4fv", value: []},
 			uSnapProjInv: {type: "Matrix4fv", value: []},
-			uSnapViewInv: {type: "Matrix4fv", value: []},
-			uShadowColor: {type: "3fv", value: [0, 0, 0]}
+			uSnapViewInv: {type: "Matrix4fv", value: []}
 		};
 		
 		this.classification = Classification.DEFAULT;

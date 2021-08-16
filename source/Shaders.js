@@ -69,8 +69,6 @@ uniform float wClassification;
 uniform float wReturnNumber;
 uniform float wSourceID;
 
-uniform vec3 uShadowColor;
-
 uniform sampler2D visibleNodes;
 uniform sampler2D gradient;
 uniform sampler2D classificationLUT;
