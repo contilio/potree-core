@@ -192,28 +192,22 @@ class PointCloudOctree extends PointCloudTree
 		sceneNode.name = geometryNode.name;
 		sceneNode.position.copy(geometryNode.boundingBox.min);
 		sceneNode.frustumCulled = true;
-		sceneNode.onAfterRender = () => {
-			console.log('onAfterRender', sceneNode);
-		}
 		sceneNode.onBeforeRender = (renderer, scene, camera, geometry, material, group) =>
 		{
-			console.log('onBeforeRender', sceneNode);
+			// console.log('onBeforeRender', sceneNode);
 			var vnStart = undefined;
 			if(this.visibleNodeTextureOffsets)
 			{
 				vnStart = this.visibleNodeTextureOffsets.get(node);
 			}
+
 			var pcIndex = node.pcIndex ? node.pcIndex : this.visibleNodes.indexOf(node);
 			var level = geometryNode.getLevel();
-
+	
+			material.uniforms.level.value = level;
+			material.uniforms.vnStart.value = vnStart;
+			material.uniforms.pcIndex.value = pcIndex;
 			this.updateMaterial(material, camera, renderer);
-			material.uniforms = {
-				...material.uniforms,
-				level: { value: level },
-				vnStart: { value: vnStart },
-				pcIndex: { value: pcIndex }
-			};
-			material.needsUpdate = true;
 
 			// if(material.program)
 			// {
@@ -318,16 +312,19 @@ class PointCloudOctree extends PointCloudTree
 
 	updateMaterial(material, camera, renderer)
 	{
-		material.uniforms = {
-			...material.uniforms,
-			fov: { value: camera.fov * (Math.PI / 180) },
-			uScreenWidth: { value: renderer.domElement.clientWidth },
-			uScreenHeight: { value: renderer.domElement.clientHeight },
-			uOctreeSpacing: { value: this.pcoGeometry.spacing * Math.max(this.scale.x, this.scale.y, this.scale.z) },
-			near: {value: camera.near },
-			far: { value: camera.far },
-			octreeSize: { value: this.pcoGeometry.boundingBox.getSize(new THREE.Vector3()).x }
-		};
+		var octtreeSpacing = this.pcoGeometry.spacing * Math.max(this.scale.x, this.scale.y, this.scale.z);
+		var octreeSize = this.pcoGeometry.boundingBox.getSize(new THREE.Vector3()).x;
+
+		material.uniforms.fov.value = camera.fov * (Math.PI / 180);
+		material.uniforms.uScreenWidth.value = renderer.domElement.clientWidth;
+		material.uniforms.uScreenHeight.value = renderer.domElement.clientHeight;
+		material.uniforms.uOctreeSpacing.value = octtreeSpacing;
+		material.uniforms.near.value = camera.near;
+		material.uniforms.far.value = camera.far;
+		material.uniforms.octreeSize.value = octreeSize;
+
+		material.uniformsNeedUpdate  = true;
+
 		// material.screenWidth = renderer.domElement.clientWidth;
 		// material.screenHeight = renderer.domElement.clientHeight;
 		// material.spacing = this.pcoGeometry.spacing * Math.max(this.scale.x, this.scale.y, this.scale.z);

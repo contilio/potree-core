@@ -56,12 +56,19 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 
 		this.uniforms =
 		{
+			projectionMatrix: { value: new THREE.Matrix4() },
+			// viewMatrix: { value: new THREE.Matrix4() },
+			uViewInv: { value: new THREE.Matrix4() },
+			// uProjInv: { value: new THREE.Matrix4() },
+			clipPlanes: { value: [] },
+
 			level: {type: "f", value: 0.0},
 			vnStart: {type: "f", value: 0.0},
 			spacing: {type: "f", value: 1.0},
 			fov: {type: "f", value: 1.0},
-			screenWidth: {type: "f", value: 1.0},
-			screenHeight: {type: "f", value: 1.0},
+			uScreenWidth: {type: "f", value: 1.0},
+			uScreenHeight: {type: "f", value: 1.0},
+			uOctreeSpacing: {type: "f", value: 0.0 },
 			near: {type: "f", value: 0.1},
 			far: {type: "f", value: 1.0},
 			uColor: {type: "c", value: new THREE.Color( 0xffffff )},
@@ -72,7 +79,6 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 			octreeSize: {type: "f", value: 0},
 			bbSize: {type: "fv", value: [0, 0, 0]},
 			elevationRange: {type: "2fv", value: [0, 0]},
-
 			visibleNodes: {type: "t", value: this.visibleNodesTexture},
 			pcIndex: {type: "f", value: 0},
 			gradient: {type: "t", value: this.gradientTexture},
@@ -84,14 +90,16 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 			intensityContrast: {type: "f", value: 0},
 			intensityBrightness:{type: "f", value: 0},
 			rgbGamma: {type: "f", value: 1},
-			rgbContrast: {type: "f", value: 0},
+			// rgbContrast: {type: "f", value: 0},
 			rgbBrightness: {type: "f", value: 0},
+			uTransition: {type: "f", value: 0},
 			wRGB: {type: "f", value: 1},
 			wIntensity: {type: "f", value: 0},
 			wElevation: {type: "f", value: 0},
 			wClassification: {type: "f", value: 0},
 			wReturnNumber: {type: "f", value: 0},
-			wSourceID: {type: "f", value: 0}
+			wSourceID: {type: "f", value: 0},
+			logDepthBufFC: {type: "f", value: 0}
 		};
 
 		this.classification = Classification.DEFAULT;
@@ -167,6 +175,7 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 
 	onBeforeCompile(shader, renderer)
 	{
+		debugger;
 		console.log('onBeforeCompile', shader);
 		if(renderer.capabilities.logarithmicDepthBuffer)
 		{
@@ -811,23 +820,23 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 		}
 	}
 
-	get rgbContrast()
-	{
-		return this.uniforms.rgbContrast.value;
-	}
+	// get rgbContrast()
+	// {
+	// 	return this.uniforms.rgbContrast.value;
+	// }
 
-	set rgbContrast(value)
-	{
-		if(this.uniforms.rgbContrast.value !== value)
-		{
-			this.uniforms.rgbContrast.value = value;
-			this.dispatchEvent(
-			{
-				type: "material_property_changed",
-				target: this
-			});
-		}
-	}
+	// set rgbContrast(value)
+	// {
+	// 	if(this.uniforms.rgbContrast.value !== value)
+	// 	{
+	// 		this.uniforms.rgbContrast.value = value;
+	// 		this.dispatchEvent(
+	// 		{
+	// 			type: "material_property_changed",
+	// 			target: this
+	// 		});
+	// 	}
+	// }
 
 	get rgbBrightness()
 	{

@@ -175,7 +175,6 @@ class Group extends BasicGroup {
   }
 
   renderNodes(renderer, octree, nodes, visibilityTextureData, camera, shader) {
-    var gl = renderer.getContext();
     var material = octree.material;
     var view = camera.matrixWorldInverse;
 
@@ -183,8 +182,6 @@ class Group extends BasicGroup {
     // var mat4holder = new Float32Array(16);
 
     for (var node of nodes) {
-      const nodeMaterial = material;
-
       if (Global.debug.allowedNodes !== undefined) {
         if (!Global.debug.allowedNodes.includes(node.name)) {
           continue;
@@ -223,44 +220,23 @@ class Group extends BasicGroup {
       // mat4holder.set(worldView.elements);
       // gl.uniformMatrix4fv(lModelView, false, mat4holder);
 
-
-      // Clip planes
-      var clippingPlanes = undefined;
-      if (material.clipping && material.clippingPlanes && material.clippingPlanes.length > 0) {
-        var planes = material.clippingPlanes;
-        var flattenedPlanes = new Array(4 * material.clippingPlanes.length);
-        for (var i = 0; i < planes.length; i++) {
-          flattenedPlanes[4*i + 0] = planes[i].normal.x;
-          flattenedPlanes[4*i + 1] = planes[i].normal.y;
-          flattenedPlanes[4*i + 2] = planes[i].normal.z;
-          flattenedPlanes[4*i + 3] = planes[i].constant;
-        }
-
-        clippingPlanes = flattenedPlanes;
-
-        // var clipPlanesLoc = shader.uniformLocations['clipPlanes[0]'];
-        // if (clipPlanesLoc === undefined) {
-        //   throw new Error('Could not find uniform clipPlanes');
-        // }
-        // gl.uniform4fv(clipPlanesLoc, flattenedPlanes);
-      }
-
       // shader.setUniform1f("uLevel", level);
       // shader.setUniform1f("uNodeSpacing", node.geometryNode.estimatedSpacing);
       // shader.setUniform1f("uPCIndex", i);
 
-      nodeMaterial.uniforms = {
-        ...nodeMaterial.uniforms,
-        uVNStart: { value: vnStart },
-        uIsLeafNode: { value: isLeaf },
-        modelMatrix: { value: world },
-        modelViewMatrix: { value: worldView },
-        clipPlanes: { value: clippingPlanes },
-        uLevel: { value: level },
-        uNodeSpacing: { value: node.geometryNode.estimatedSpacing },
-        uPCIndex: { value: i },
-      };
-      nodeMaterial.needsUpdate = true;
+      material.uniforms.uVNStart.value = vnStart;
+      material.uniforms.uIsLeafNode.value = isLeaf;
+      material.uniforms.modelMatrix.value = world;
+      material.uniforms.modelViewMatrix.value = worldView;
+      material.uniforms.uLevel.value = level;
+      material.uniforms.uNodeSpacing.value = node.geometryNode.estimatedSpacing;
+      material.uniforms.uPCIndex.value = i;
+      material.uniformsNeedUpdate = true;
+      // nodeMaterial.defines = {
+      //   ...nodeMaterial.defines,
+      //   num_clipplanes
+      // }
+      // nodeMaterial.needsUpdate = true;
 
       // var geometry = node.geometryNode.geometry;
       // if (!this.meshes.has(geometry)) {
@@ -328,20 +304,6 @@ class Group extends BasicGroup {
       shader = this.shaders.get(material);
     }
 
-    var numClippingPlanes = (material.clipping && material.clippingPlanes && material.clippingPlanes.length) ? material.clippingPlanes.length : 0;
-
-    var defines = [
-      "#define num_clipplanes " + numClippingPlanes,
-    ];
-
-    // var definesString = defines.join("\n");
-    // var vs = definesString + "\n" + material.vertexShader;
-    // var fs = definesString + "\n" + material.fragmentShader;
-
-    // shader.update(vs, fs);
-
-    material.needsUpdate = false;
-
     for (var uniformName of Object.keys(material.uniforms)) {
       var uniform = material.uniforms[uniformName];
 
@@ -362,40 +324,66 @@ class Group extends BasicGroup {
       }
     }
 
-    console.log(material);
+    // Clip planes
+    var numClippingPlanes = (material.clipping && material.clippingPlanes && material.clippingPlanes.length) ? material.clippingPlanes.length : 0;
+    var clipPlanesChanged = material.defines['num_clipplanes'] !== numClippingPlanes;
+    var clippingPlanes = [];
+    if (clipPlanesChanged) {
+      material.defines = {
+        ...material.defines,
+        num_clipplanes: numClippingPlanes
+      };
+      material.needsUpdate = true;
+    }
+    if (numClippingPlanes > 0) {
+      var planes = material.clippingPlanes;
+      var flattenedPlanes = new Array(4 * material.clippingPlanes.length);
+      for (var i = 0; i < planes.length; i++) {
+        flattenedPlanes[4*i + 0] = planes[i].normal.x;
+        flattenedPlanes[4*i + 1] = planes[i].normal.y;
+        flattenedPlanes[4*i + 2] = planes[i].normal.z;
+        flattenedPlanes[4*i + 3] = planes[i].constant;
+      }
+      clippingPlanes = flattenedPlanes;
+    }
 
-    material.uniforms = {
-      ...material.uniforms,
-      projectionMatrix: { value: proj },
-      viewMatrix: { value: view },
-      uViewInv: { value: viewInv },
-      uProjInv: { value: projInv },
-      // uScreenWidth: { value: material.screenWidth },
-      // uScreenHeight: { value: material.screenHeight },
-      fov: { value: Math.PI * camera.fov / 180 },
-      near: { value: camera.near },
-      far: { value: camera.far },
-      size: { value: material.size },
-      uOctreeSpacing: { value: material.spacing },
-      uColor: { value: material.color },
-      uOpacity: { value: material.opacity },
-      elevationRange: { value: material.elevationRange },
-      intensityRange: { value: material.intensityRange },
-      intensityGamma: { value: material.intensityGamma },
-      intensityContrast: { value: material.intensityContrast },
-      intensityBrightness: { value: material.intensityBrightness },
-      rgbGamma: { value: material.rgbGamma },
-      rgbContrast: { value: material.rgbContrast },
-      rgbBrightness: { value: material.rgbBrightness },
-      uTransition: { value: material.transition },
-      wRGB: { value: material.weightRGB },
-      wIntensity: { value: material.weightIntensity },
-      wElevation: { value: material.weightElevation },
-      wClassification: { value: material.weightClassification },
-      wReturnNumber: { value: material.weightReturnNumber },
-      wSourceID: { value: material.weightSourceID },
-      ...(renderer.capabilities.logarithmicDepthBuffer ? { logDepthBufFC: { value: 2.0 / (Math.log(camera.far + 1.0) / Math.LN2) } } : {})
-    };
+    const clippingPlanesAsVec4Array = material.clippingPlanes ? material.clippingPlanes.map(x => new THREE.Vector4(x.normal.x, x.normal.y, x.normal.z, x.constant)) : [];
+    console.log('a',material.uniforms );
+    material.uniforms.projectionMatrix.value.copy(proj);
+    // material.uniforms.viewMatrix.value.copy(view);
+    material.uniforms.uViewInv.value.copy(viewInv);
+    // material.uniforms.uProjInv.value.copy(projInv);
+    console.log('ab');
+    material.uniforms.clipPlanes.value = clippingPlanesAsVec4Array;
+    material.uniforms.fov.value = Math.PI * camera.fov / 180;
+    material.uniforms.near.value = camera.near;
+    material.uniforms.far.value = camera.far;
+    material.uniforms.size.value = material.size;
+    console.log('b');
+    material.uniforms.uOctreeSpacing.value = material.spacing;
+    material.uniforms.uColor.value = material.color;
+    material.uniforms.uOpacity.value = material.opacity;
+    material.uniforms.elevationRange.value = material.elevationRange;
+    material.uniforms.intensityRange.value = material.intensityRange;
+    material.uniforms.intensityGamma.value = material.intensityGamma;
+    material.uniforms.intensityContrast.value = material.intensityContrast;
+    console.log('c');
+    material.uniforms.intensityBrightness.value = material.intensityBrightness;
+    material.uniforms.rgbGamma.value = material.rgbGamma;
+    // material.uniforms.rgbContrast.value = material.rgbContrast;
+    material.uniforms.rgbBrightness.value = material.rgbBrightness;
+    material.uniforms.uTransition.value = material.transition;
+    material.uniforms.wRGB.value = material.weightRGB;
+    console.log('d');
+    material.uniforms.wIntensity.value = material.weightIntensity;
+    material.uniforms.wElevation.value = material.weightElevation;
+    material.uniforms.wClassification.value = material.weightClassification;
+    material.uniforms.wReturnNumber.value = material.weightReturnNumber;
+    material.uniforms.wSourceID.value = material.weightSourceID;
+    material.uniforms.logDepthBufFC.value = renderer.capabilities.logarithmicDepthBuffer ? 2.0 / (Math.log(camera.far + 1.0) / Math.LN2) : undefined;
+    console.log('e');
+    material.uniformsNeedUpdate = true;
+    // material.uniforms.clipPlanes.value = clippingPlanesAsVec4Array;
 
     /*
     gl.useProgram(shader.program);
@@ -475,7 +463,7 @@ class Group extends BasicGroup {
     currentTextureBindingPoint++;
     */
 
-    this.renderNodes(renderer, octree, nodes, visibilityTextureData, camera, shader);
+    // this.renderNodes(renderer, octree, nodes, visibilityTextureData, camera, shader);
 
     // gl.activeTexture(gl.TEXTURE2);
     // gl.bindTexture(gl.TEXTURE_2D, null);

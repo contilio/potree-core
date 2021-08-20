@@ -59,7 +59,7 @@ uniform float intensityGamma;
 uniform float intensityContrast;
 uniform float intensityBrightness;
 uniform float rgbGamma;
-uniform float rgbContrast;
+// uniform float rgbContrast;
 uniform float rgbBrightness;
 uniform float uTransition;
 uniform float wRGB;
@@ -599,7 +599,7 @@ precision highp int;
 
 // uniform mat4 viewMatrix;
 uniform mat4 uViewInv;
-uniform mat4 uProjInv;
+// uniform mat4 uProjInv;
 // uniform vec3 cameraPosition;
 
 uniform mat4 projectionMatrix;
