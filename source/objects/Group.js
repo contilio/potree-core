@@ -17,7 +17,9 @@ class Group extends BasicGroup {
     super();
 
     this.buffers = new Map();
+    this.meshes = new Map();
     this.shaders = new Map();
+    this.materials = new Map();
     this.textures = new Map();
     this.types = new Map();
   }
@@ -41,10 +43,10 @@ class Group extends BasicGroup {
   onBeforeRender(renderer, scene, camera, geometry, material, group) {
     super.onBeforeRender(renderer, scene, camera, geometry, material, group);
 
-    var gl = renderer.getContext();
-    if (gl.bindVertexArray === undefined) {
-      this.getExtensions(gl)
-    }
+    // var gl = renderer.getContext();
+    // if (gl.bindVertexArray === undefined) {
+    //   this.getExtensions(gl)
+    // }
 
     var result = this.fetchOctrees();
 
@@ -53,10 +55,14 @@ class Group extends BasicGroup {
       this.renderOctree(renderer, octree, nodes, camera);
     }
 
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, null);
+    // gl.activeTexture(gl.TEXTURE1);
+    // gl.bindTexture(gl.TEXTURE_2D, null);
 
-    renderer.state.reset();
+    // renderer.state.reset();
+  }
+
+  createMesh(geometry, material) {
+    return new THREE.Points(geometry, material);
   }
 
   createBuffer(gl, geometry) {
@@ -97,6 +103,10 @@ class Group extends BasicGroup {
     gl.bindVertexArray(null);
 
     return webglBuffer;
+  }
+
+  updateMesh(mesh, geometry) {
+    mesh.needsUpdate = true;
   }
 
   updateBuffer(gl, geometry) {
@@ -170,9 +180,11 @@ class Group extends BasicGroup {
     var view = camera.matrixWorldInverse;
 
     var worldView = new THREE.Matrix4();
-    var mat4holder = new Float32Array(16);
+    // var mat4holder = new Float32Array(16);
 
     for (var node of nodes) {
+      const nodeMaterial = material;
+
       if (Global.debug.allowedNodes !== undefined) {
         if (!Global.debug.allowedNodes.includes(node.name)) {
           continue;
@@ -182,13 +194,13 @@ class Group extends BasicGroup {
       var world = node.sceneNode.matrixWorld;
       worldView.multiplyMatrices(view, world);
 
+      var vnStart = undefined;
       if (visibilityTextureData) {
-        var vnStart = visibilityTextureData.offsets.get(node);
-        shader.setUniform1f("uVNStart", vnStart);
+        vnStart = visibilityTextureData.offsets.get(node);
+      } else {
       }
 
       var level = node.getLevel();
-      shader.setUniform("uDebug", node.debug === true);
 
       var isLeaf;
       if (node instanceof PointCloudOctreeNode) {
@@ -197,20 +209,23 @@ class Group extends BasicGroup {
       else if (node instanceof PointCloudArena4DNode) {
         isLeaf = node.geometryNode.isLeaf;
       }
-      shader.setUniform("uIsLeafNode", isLeaf);
+
+      // shader.setUniform("uIsLeafNode", isLeaf);
 
       //TODO <consider passing matrices in an array to avoid uniformMatrix4fv overhead>
-      var lModel = shader.uniformLocations["modelMatrix"];
-      if (lModel) {
-        mat4holder.set(world.elements);
-        gl.uniformMatrix4fv(lModel, false, mat4holder);
-      }
+      // var lModel = shader.uniformLocations["modelMatrix"];
+      // if (lModel) {
+      //   mat4holder.set(world.elements);
+      //   gl.uniformMatrix4fv(lModel, false, mat4holder);
+      // }
 
-      var lModelView = shader.uniformLocations["modelViewMatrix"];
-      mat4holder.set(worldView.elements);
-      gl.uniformMatrix4fv(lModelView, false, mat4holder);
+      // var lModelView = shader.uniformLocations["modelViewMatrix"];
+      // mat4holder.set(worldView.elements);
+      // gl.uniformMatrix4fv(lModelView, false, mat4holder);
+
 
       // Clip planes
+      var clippingPlanes = undefined;
       if (material.clipping && material.clippingPlanes && material.clippingPlanes.length > 0) {
         var planes = material.clippingPlanes;
         var flattenedPlanes = new Array(4 * material.clippingPlanes.length);
@@ -221,38 +236,65 @@ class Group extends BasicGroup {
           flattenedPlanes[4*i + 3] = planes[i].constant;
         }
 
-        var clipPlanesLoc = shader.uniformLocations['clipPlanes[0]'];
-        if (clipPlanesLoc === undefined) {
-          throw new Error('Could not find uniform clipPlanes');
-        }
-        gl.uniform4fv(clipPlanesLoc, flattenedPlanes);
+        clippingPlanes = flattenedPlanes;
+
+        // var clipPlanesLoc = shader.uniformLocations['clipPlanes[0]'];
+        // if (clipPlanesLoc === undefined) {
+        //   throw new Error('Could not find uniform clipPlanes');
+        // }
+        // gl.uniform4fv(clipPlanesLoc, flattenedPlanes);
       }
 
-      shader.setUniform1f("uLevel", level);
-      shader.setUniform1f("uNodeSpacing", node.geometryNode.estimatedSpacing);
-      shader.setUniform1f("uPCIndex", i);
+      // shader.setUniform1f("uLevel", level);
+      // shader.setUniform1f("uNodeSpacing", node.geometryNode.estimatedSpacing);
+      // shader.setUniform1f("uPCIndex", i);
 
-      var geometry = node.geometryNode.geometry;
-      var webglBuffer = null;
-      if (!this.buffers.has(geometry)) {
-        webglBuffer = this.createBuffer(gl, geometry);
-        this.buffers.set(geometry, webglBuffer);
-      }
-      else {
-        webglBuffer = this.buffers.get(geometry);
-        for (var attributeName in geometry.attributes) {
-          var attribute = geometry.attributes[attributeName];
-          if (attribute.version > webglBuffer.vbos.get(attributeName).version) {
-            this.updateBuffer(gl, geometry);
-          }
-        }
-      }
+      nodeMaterial.uniforms = {
+        ...nodeMaterial.uniforms,
+        uVNStart: { value: vnStart },
+        uIsLeafNode: { value: isLeaf },
+        modelMatrix: { value: world },
+        modelViewMatrix: { value: worldView },
+        clipPlanes: { value: clippingPlanes },
+        uLevel: { value: level },
+        uNodeSpacing: { value: node.geometryNode.estimatedSpacing },
+        uPCIndex: { value: i },
+      };
+      nodeMaterial.needsUpdate = true;
 
-      gl.bindVertexArray(webglBuffer.vao);
-      gl.drawArrays(gl.POINTS, 0, webglBuffer.numElements);
+      // var geometry = node.geometryNode.geometry;
+      // if (!this.meshes.has(geometry)) {
+      //   var mesh = this.createMesh(geometry, nodeMaterial);
+      //   this.meshes.set(geometry, mesh);
+      //   // this.add(mesh);
+      //   console.log('new mesh', mesh, 'for', node);
+      // } else {
+      //   var mesh = this.meshes.get(geometry);
+      //   this.updateMesh(mesh, geometry);
+      //   console.log('update mesh', mesh, 'for', node);
+      // }
+
+      // var geometry = node.geometryNode.geometry;
+      // var webglBuffer = null;
+      // if (!this.buffers.has(geometry)) {
+      //   webglBuffer = this.createBuffer(gl, geometry);
+      //   this.buffers.set(geometry, webglBuffer);
+      // }
+      // else {
+      //   webglBuffer = this.buffers.get(geometry);
+      //   for (var attributeName in geometry.attributes) {
+      //     var attribute = geometry.attributes[attributeName];
+      //     if (attribute.version > webglBuffer.vbos.get(attributeName).version) {
+      //       this.updateBuffer(gl, geometry);
+      //     }
+      //   }
+      // }
+
+      // gl.bindVertexArray(webglBuffer.vao);
+      // gl.drawArrays(gl.POINTS, 0, webglBuffer.numElements);
     }
 
-    gl.bindVertexArray(null);
+    // gl.bindVertexArray(null);
   }
 
   renderOctree(renderer, octree, nodes, camera) {
@@ -277,10 +319,12 @@ class Group extends BasicGroup {
     var shader = null;
 
     if (!this.shaders.has(material)) {
+      console.log('new shader');
       shader = new Shader(gl, "pointcloud", material.vertexShader, material.fragmentShader);
       this.shaders.set(material, shader);
     }
     else {
+      console.log('found shader');
       shader = this.shaders.get(material);
     }
 
@@ -290,11 +334,11 @@ class Group extends BasicGroup {
       "#define num_clipplanes " + numClippingPlanes,
     ];
 
-    var definesString = defines.join("\n");
-    var vs = definesString + "\n" + material.vertexShader;
-    var fs = definesString + "\n" + material.fragmentShader;
+    // var definesString = defines.join("\n");
+    // var vs = definesString + "\n" + material.vertexShader;
+    // var fs = definesString + "\n" + material.fragmentShader;
 
-    shader.update(vs, fs);
+    // shader.update(vs, fs);
 
     material.needsUpdate = false;
 
@@ -318,6 +362,42 @@ class Group extends BasicGroup {
       }
     }
 
+    console.log(material);
+
+    material.uniforms = {
+      ...material.uniforms,
+      projectionMatrix: { value: proj },
+      viewMatrix: { value: view },
+      uViewInv: { value: viewInv },
+      uProjInv: { value: projInv },
+      // uScreenWidth: { value: material.screenWidth },
+      // uScreenHeight: { value: material.screenHeight },
+      fov: { value: Math.PI * camera.fov / 180 },
+      near: { value: camera.near },
+      far: { value: camera.far },
+      size: { value: material.size },
+      uOctreeSpacing: { value: material.spacing },
+      uColor: { value: material.color },
+      uOpacity: { value: material.opacity },
+      elevationRange: { value: material.elevationRange },
+      intensityRange: { value: material.intensityRange },
+      intensityGamma: { value: material.intensityGamma },
+      intensityContrast: { value: material.intensityContrast },
+      intensityBrightness: { value: material.intensityBrightness },
+      rgbGamma: { value: material.rgbGamma },
+      rgbContrast: { value: material.rgbContrast },
+      rgbBrightness: { value: material.rgbBrightness },
+      uTransition: { value: material.transition },
+      wRGB: { value: material.weightRGB },
+      wIntensity: { value: material.weightIntensity },
+      wElevation: { value: material.weightElevation },
+      wClassification: { value: material.weightClassification },
+      wReturnNumber: { value: material.weightReturnNumber },
+      wSourceID: { value: material.weightSourceID },
+      ...(renderer.capabilities.logarithmicDepthBuffer ? { logDepthBufFC: { value: 2.0 / (Math.log(camera.far + 1.0) / Math.LN2) } } : {})
+    };
+
+    /*
     gl.useProgram(shader.program);
 
     if (material.opacity < 1.0) {
@@ -393,12 +473,13 @@ class Group extends BasicGroup {
     gl.activeTexture(gl.TEXTURE0 + currentTextureBindingPoint);
     gl.bindTexture(classificationTexture.target, classificationTexture.id);
     currentTextureBindingPoint++;
+    */
 
     this.renderNodes(renderer, octree, nodes, visibilityTextureData, camera, shader);
 
-    gl.activeTexture(gl.TEXTURE2);
-    gl.bindTexture(gl.TEXTURE_2D, null);
-    gl.activeTexture(gl.TEXTURE0);
+    // gl.activeTexture(gl.TEXTURE2);
+    // gl.bindTexture(gl.TEXTURE_2D, null);
+    // gl.activeTexture(gl.TEXTURE0);
   }
 };
 

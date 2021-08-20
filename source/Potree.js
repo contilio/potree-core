@@ -351,7 +351,7 @@ function updatePointClouds(pointclouds, camera, renderer, totalPointBudget) {
   var result = updateVisibility(pointclouds, camera, renderer, totalPointBudget);
 
   for (var i = 0; i < pointclouds.length; i++) {
-    pointclouds[i].updateMaterial(pointclouds[i].material, pointclouds[i].visibleNodes, camera, renderer);
+    pointclouds[i].updateMaterial(pointclouds[i].material, camera, renderer);
     pointclouds[i].updateVisibleBounds();
   }
 

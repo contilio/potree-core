@@ -12,8 +12,8 @@ precision highp int;
 ` + THREE.ShaderChunk.common + `
 ` + THREE.ShaderChunk.logdepthbuf_pars_vertex + `
 
-attribute vec3 position;
-attribute vec3 color;
+// attribute vec3 position;
+// attribute vec3 color;
 attribute float intensity;
 attribute float classification;
 attribute float returnNumber;
@@ -22,10 +22,10 @@ attribute float pointSourceID;
 attribute vec4 indices;
 attribute float spacing;
 
-uniform mat4 modelMatrix;
-uniform mat4 modelViewMatrix;
-uniform mat4 projectionMatrix;
-uniform mat4 viewMatrix;
+// uniform mat4 modelMatrix;
+// uniform mat4 modelViewMatrix;
+// uniform mat4 projectionMatrix;
+// uniform mat4 viewMatrix;
 uniform mat4 uViewInv;
 
 uniform float uScreenWidth;
@@ -110,7 +110,6 @@ float round(float number)
 //---------------------
 
 #if (defined(adaptive_point_size) || defined(color_type_lod)) && defined(tree_type_octree)
-
 	/**
 	 * number of 1-bits up to inclusive index position
 	 * number is treated as if it were an integer in the range 0-255
@@ -598,10 +597,10 @@ precision highp int;
 ` + THREE.ShaderChunk.common + `
 ` + THREE.ShaderChunk.logdepthbuf_pars_fragment + `
 
-uniform mat4 viewMatrix;
+// uniform mat4 viewMatrix;
 uniform mat4 uViewInv;
 uniform mat4 uProjInv;
-uniform vec3 cameraPosition;
+// uniform vec3 cameraPosition;
 
 uniform mat4 projectionMatrix;
 uniform float uOpacity;

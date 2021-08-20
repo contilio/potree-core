@@ -28,6 +28,7 @@ class Shader
 
 	update(vsSource, fsSource)
 	{
+		console.log('asdasd');
 		this.vsSource = vsSource;
 		this.fsSource = fsSource;
 
@@ -36,23 +37,23 @@ class Shader
 
 	compileShader(shader, source)
 	{
-		var gl = this.gl;
+		// var gl = this.gl;
 
-		gl.shaderSource(shader, source);
+		// gl.shaderSource(shader, source);
 
-		gl.compileShader(shader);
+		// gl.compileShader(shader);
 
-		var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-		if(!success)
-		{
-			var info = gl.getShaderInfoLog(shader);
-			throw new Error("Potree: Could not compile shader " + this.name + ", " + info);
-		}
+		// var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+		// if(!success)
+		// {
+		// 	var info = gl.getShaderInfoLog(shader);
+		// 	throw new Error("Potree: Could not compile shader " + this.name + ", " + info + "\nSOURCE:\n", source);
+		// }
 	}
 
 	linkProgram()
 	{
-
+		/*
 		var gl = this.gl;
 
 		this.uniformLocations = {};
@@ -137,6 +138,7 @@ class Shader
 
 			this.cache.set(`${this.vsSource}, ${this.fsSource}`, cached);
 		}
+		*/
 	}
 
 	setUniformMatrix4(name, value)
