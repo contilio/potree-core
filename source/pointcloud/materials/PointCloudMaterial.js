@@ -59,7 +59,6 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 			projectionMatrix: { value: new THREE.Matrix4() },
 			uViewInv: { value: new THREE.Matrix4() },
 			clipPlanes: { value: [] },
-
 			level: {type: "f", value: 0.0},
 			vnStart: {type: "f", value: 0.0},
 			spacing: {type: "f", value: 1.0},
@@ -88,7 +87,6 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 			intensityContrast: {type: "f", value: 0},
 			intensityBrightness:{type: "f", value: 0},
 			rgbGamma: {type: "f", value: 1},
-			// rgbContrast: {type: "f", value: 0},
 			rgbBrightness: {type: "f", value: 0},
 			uTransition: {type: "f", value: 0},
 			wRGB: {type: "f", value: 1},
@@ -105,9 +103,6 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 		this.defaultAttributeValues.classification = [0, 0, 0];
 		this.defaultAttributeValues.indices = [0, 0, 0, 0];
 
-		// var defines = this.getDefines();
-		// this.vertexShader = defines + Shaders.vertex;
-		// this.fragmentShader = defines + Shaders.fragment;
 		this.defines = this.getDefines();
 		this.vertexColors = THREE.VertexColors;
 
@@ -122,7 +117,7 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 			if(this.defines.get(key) !== value)
 			{
 				this.defines.set(key, value);
-				this.updateShaderSource();
+				this.updateMaterial();
 			}
 		}
 		else
@@ -136,12 +131,9 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 		this.defines.delete(key);
 	}
 
-	updateShaderSource()
+	updateMaterial()
 	{
 		this.defines = this.getDefines();
-		// var defines = this.getDefines();
-		// this.vertexShader = defines + Shaders.vertex;
-		// this.fragmentShader = defines + Shaders.fragment;
 
 		if(this.opacity === 1.0)
 		{
@@ -173,8 +165,6 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 
 	onBeforeCompile(shader, renderer)
 	{
-		debugger;
-		console.log('onBeforeCompile', shader);
 		if(renderer.capabilities.logarithmicDepthBuffer)
 		{
 			this.defines = { ...this.defines, USE_LOGDEPTHBUF: true, USE_LOGDEPTHBUF_EXT: true, EPSILON: 1e-6 };
@@ -223,124 +213,6 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 			...(this.weighted ? { weighted_splats: true } : {})
 		};
 		return defines;
-
-
-		// if(this.pointSizeType === PointSizeType.FIXED)
-		// {
-		// 	defines = {...defines, fixed_point_size: true };
-		// 	// defines.push("#define fixed_point_size");
-		// }
-		// else if(this.pointSizeType === PointSizeType.ATTENUATED)
-		// {
-		// 	defines = {...defines, attenuated_point_size: true };
-		// 	// defines.push("#define attenuated_point_size");
-		// }
-		// else if(this.pointSizeType === PointSizeType.ADAPTIVE)
-		// {
-		// 	defines = {...defines, adaptive_point_size: true };
-		// 	// defines.push("#define adaptive_point_size");
-		// }
-
-		// if(this.shape === PointShape.SQUARE)
-		// {
-		// 	defines = {...defines, square_point_shape: true };
-		// 	// defines.push("#define square_point_shape");
-		// }
-		// else if(this.shape === PointShape.CIRCLE)
-		// {
-		// 	defines = {...defines, circle_point_shape: true };
-		// 	// defines.push("#define circle_point_shape");
-		// }
-		// else if(this.shape === PointShape.PARABOLOID)
-		// {
-		// 	defines = {...defines, paraboloid_point_shape: true };
-		// 	// defines.push("#define paraboloid_point_shape");
-		// }
-
-		// if(this._pointColorType === PointColorType.RGB)
-		// {
-		// 	defines.push("#define color_type_rgb");
-		// }
-		// else if(this._pointColorType === PointColorType.COLOR)
-		// {
-		// 	defines.push("#define color_type_color");
-		// }
-		// else if(this._pointColorType === PointColorType.DEPTH)
-		// {
-		// 	defines.push("#define color_type_depth");
-		// }
-		// else if(this._pointColorType === PointColorType.HEIGHT)
-		// {
-		// 	defines.push("#define color_type_height");
-		// }
-		// else if(this._pointColorType === PointColorType.INTENSITY)
-		// {
-		// 	defines.push("#define color_type_intensity");
-		// }
-		// else if(this._pointColorType === PointColorType.INTENSITY_GRADIENT)
-		// {
-		// 	defines.push("#define color_type_intensity_gradient");
-		// }
-		// else if(this._pointColorType === PointColorType.LOD)
-		// {
-		// 	defines.push("#define color_type_lod");
-		// }
-		// else if(this._pointColorType === PointColorType.POINT_INDEX)
-		// {
-		// 	defines.push("#define color_type_point_index");
-		// }
-		// else if(this._pointColorType === PointColorType.CLASSIFICATION)
-		// {
-		// 	defines.push("#define color_type_classification");
-		// }
-		// else if(this._pointColorType === PointColorType.RETURN_NUMBER)
-		// {
-		// 	defines.push("#define color_type_return_number");
-		// }
-		// else if(this._pointColorType === PointColorType.SOURCE)
-		// {
-		// 	defines.push("#define color_type_source");
-		// }
-		// else if(this._pointColorType === PointColorType.NORMAL)
-		// {
-		// 	defines.push("#define color_type_normal");
-		// }
-		// else if(this._pointColorType === PointColorType.PHONG)
-		// {
-		// 	defines.push("#define color_type_phong");
-		// }
-		// else if(this._pointColorType === PointColorType.RGB_HEIGHT)
-		// {
-		// 	defines.push("#define color_type_rgb_height");
-		// }
-		// else if(this._pointColorType === PointColorType.COMPOSITE)
-		// {
-		// 	defines.push("#define color_type_composite");
-		// }
-
-
-		// if(this._treeType === TreeType.OCTREE)
-		// {
-		// 	defines.push("#define tree_type_octree");
-		// }
-		// else if(this._treeType === TreeType.KDTREE)
-		// {
-		// 	defines.push("#define tree_type_kdtree");
-		// }
-
-		// if(this.weighted)
-		// {
-		// 	defines.push("#define weighted_splats");
-		// }
-
-		// console.log('defines', this.defines);
-		// // for(var [key, value] of this.defines)
-		// // {
-		// // 	console.log('define',key, value);
-		// // 	defines.push(value);
-		// // }
-
-		// return defines.join("\n");
 	}
 
 	get gradient()
@@ -427,7 +299,7 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 		if(this._weighted !== value)
 		{
 			this._weighted = value;
-			this.updateShaderSource();
+			this.updateMaterial();
 		}
 	}
 
@@ -441,7 +313,7 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 		if(this.uniforms.fov.value !== value)
 		{
 			this.uniforms.fov.value = value;
-			this.updateShaderSource();
+			this.updateMaterial();
 		}
 	}
 
@@ -455,7 +327,7 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 		if(this.uniforms.screenWidth.value !== value)
 		{
 			this.uniforms.screenWidth.value = value;
-			this.updateShaderSource();
+			this.updateMaterial();
 		}
 	}
 
@@ -469,7 +341,7 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 		if(this.uniforms.screenHeight.value !== value)
 		{
 			this.uniforms.screenHeight.value = value;
-			this.updateShaderSource();
+			this.updateMaterial();
 		}
 	}
 
@@ -511,7 +383,7 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 			if(this.uniforms.uOpacity.value !== value)
 			{
 				this.uniforms.uOpacity.value = value;
-				this.updateShaderSource();
+				this.updateMaterial();
 				this.dispatchEvent(
 				{
 					type: "opacity_changed",
@@ -536,7 +408,7 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 		if(this._pointColorType !== value)
 		{
 			this._pointColorType = value;
-			this.updateShaderSource();
+			this.updateMaterial();
 			this.dispatchEvent(
 			{
 				type: "point_color_type_changed",
@@ -560,7 +432,7 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 		if(this._pointSizeType !== value)
 		{
 			this._pointSizeType = value;
-			this.updateShaderSource();
+			this.updateMaterial();
 			this.dispatchEvent(
 			{
 				type: "point_size_type_changed",
@@ -607,7 +479,7 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 		if(this._shape !== value)
 		{
 			this._shape = value;
-			this.updateShaderSource();
+			this.updateMaterial();
 			this.dispatchEvent(
 			{
 				type: "point_shape_changed",
@@ -631,7 +503,7 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 		if(this._treeType !== value)
 		{
 			this._treeType = value;
-			this.updateShaderSource();
+			this.updateMaterial();
 		}
 	}
 
