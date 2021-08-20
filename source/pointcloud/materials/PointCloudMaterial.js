@@ -57,9 +57,7 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 		this.uniforms =
 		{
 			projectionMatrix: { value: new THREE.Matrix4() },
-			// viewMatrix: { value: new THREE.Matrix4() },
 			uViewInv: { value: new THREE.Matrix4() },
-			// uProjInv: { value: new THREE.Matrix4() },
 			clipPlanes: { value: [] },
 
 			level: {type: "f", value: 0.0},

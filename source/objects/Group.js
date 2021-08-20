@@ -2,39 +2,19 @@
 
 import * as THREE from 'three';
 
-import { WebGLBuffer } from "../WebGLBuffer.js";
 import { BasicGroup } from "./BasicGroup.js";
 import { PointCloudTree } from "../pointcloud/PointCloudTree.js";
 import { PointCloudOctreeNode } from "../pointcloud/PointCloudOctree.js";
 import { PointCloudArena4DNode } from "../pointcloud/PointCloudArena4D.js";
-import { AttributeLocations, PointSizeType, PointColorType } from "../Potree.js";
+import { PointSizeType, PointColorType } from "../Potree.js";
 import { Global } from "../Global.js";
-import { Shader } from "../Shader.js";
 import { WebGLTexture } from "../WebGLTexture.js";
 
 class Group extends BasicGroup {
   constructor() {
     super();
 
-    this.buffers = new Map();
-    this.meshes = new Map();
-    this.shaders = new Map();
-    this.materials = new Map();
     this.textures = new Map();
-    this.types = new Map();
-  }
-
-  /**
-   * Get WebGL extensions required for the more advanced features.
-   */
-  getExtensions(gl) {
-    this.types.set(Float32Array, gl.FLOAT);
-    this.types.set(Uint8Array, gl.UNSIGNED_BYTE);
-    this.types.set(Uint16Array, gl.UNSIGNED_SHORT);
-
-    var extVAO = gl.getExtension("OES_vertex_array_object");
-    gl.createVertexArray = extVAO.createVertexArrayOES.bind(extVAO);
-    gl.bindVertexArray = extVAO.bindVertexArrayOES.bind(extVAO);
   }
 
   /**
@@ -43,111 +23,12 @@ class Group extends BasicGroup {
   onBeforeRender(renderer, scene, camera, geometry, material, group) {
     super.onBeforeRender(renderer, scene, camera, geometry, material, group);
 
-    // var gl = renderer.getContext();
-    // if (gl.bindVertexArray === undefined) {
-    //   this.getExtensions(gl)
-    // }
-
     var result = this.fetchOctrees();
 
     for (var octree of result.octrees) {
       var nodes = octree.visibleNodes;
-      this.renderOctree(renderer, octree, nodes, camera);
+      this.prepareOcttree(renderer, octree, nodes, camera);
     }
-
-    // gl.activeTexture(gl.TEXTURE1);
-    // gl.bindTexture(gl.TEXTURE_2D, null);
-
-    // renderer.state.reset();
-  }
-
-  createMesh(geometry, material) {
-    return new THREE.Points(geometry, material);
-  }
-
-  createBuffer(gl, geometry) {
-    var webglBuffer = new WebGLBuffer();
-    webglBuffer.vao = gl.createVertexArray();
-    webglBuffer.numElements = geometry.attributes.position.count;
-
-    gl.bindVertexArray(webglBuffer.vao);
-
-    for (var attributeName in geometry.attributes) {
-      var bufferAttribute = geometry.attributes[attributeName];
-
-      var vbo = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-      gl.bufferData(gl.ARRAY_BUFFER, bufferAttribute.array, gl.STATIC_DRAW);
-
-      var attributeLocation = AttributeLocations[attributeName];
-      var normalized = bufferAttribute.normalized;
-      var type = this.types.get(bufferAttribute.array.constructor);
-
-      if (type !== undefined) {
-        gl.vertexAttribPointer(attributeLocation, bufferAttribute.itemSize, type, normalized, 0, 0);
-        gl.enableVertexAttribArray(attributeLocation);
-      }
-
-      webglBuffer.vbos.set(attributeName,
-        {
-          handle: vbo,
-          name: attributeName,
-          count: bufferAttribute.count,
-          itemSize: bufferAttribute.itemSize,
-          type: geometry.attributes.position.array.constructor,
-          version: 0
-        });
-    }
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    gl.bindVertexArray(null);
-
-    return webglBuffer;
-  }
-
-  updateMesh(mesh, geometry) {
-    mesh.needsUpdate = true;
-  }
-
-  updateBuffer(gl, geometry) {
-    var webglBuffer = this.buffers.get(geometry);
-
-    gl.bindVertexArray(webglBuffer.vao);
-
-    for (var attributeName in geometry.attributes) {
-      var bufferAttribute = geometry.attributes[attributeName];
-
-      var attributeLocation = AttributeLocations[attributeName];
-      var normalized = bufferAttribute.normalized;
-      var type = this.types.get(bufferAttribute.array.constructor);
-
-      var vbo = null;
-      if (!webglBuffer.vbos.has(attributeName)) {
-        vbo = gl.createBuffer();
-
-        webglBuffer.vbos.set(attributeName,
-          {
-            handle: vbo,
-            name: attributeName,
-            count: bufferAttribute.count,
-            itemSize: bufferAttribute.itemSize,
-            type: geometry.attributes.position.array.constructor,
-            version: bufferAttribute.version
-          });
-      }
-      else {
-        vbo = webglBuffer.vbos.get(attributeName).handle;
-        webglBuffer.vbos.get(attributeName).version = bufferAttribute.version;
-      }
-
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-      gl.bufferData(gl.ARRAY_BUFFER, bufferAttribute.array, gl.STATIC_DRAW);
-      gl.vertexAttribPointer(attributeLocation, bufferAttribute.itemSize, type, normalized, 0, 0);
-      gl.enableVertexAttribArray(attributeLocation);
-    }
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    gl.bindVertexArray(null);
   }
 
   fetchOctrees() {
@@ -179,7 +60,6 @@ class Group extends BasicGroup {
     var view = camera.matrixWorldInverse;
 
     var worldView = new THREE.Matrix4();
-    // var mat4holder = new Float32Array(16);
 
     for (var node of nodes) {
       if (Global.debug.allowedNodes !== undefined) {
@@ -207,23 +87,6 @@ class Group extends BasicGroup {
         isLeaf = node.geometryNode.isLeaf;
       }
 
-      // shader.setUniform("uIsLeafNode", isLeaf);
-
-      //TODO <consider passing matrices in an array to avoid uniformMatrix4fv overhead>
-      // var lModel = shader.uniformLocations["modelMatrix"];
-      // if (lModel) {
-      //   mat4holder.set(world.elements);
-      //   gl.uniformMatrix4fv(lModel, false, mat4holder);
-      // }
-
-      // var lModelView = shader.uniformLocations["modelViewMatrix"];
-      // mat4holder.set(worldView.elements);
-      // gl.uniformMatrix4fv(lModelView, false, mat4holder);
-
-      // shader.setUniform1f("uLevel", level);
-      // shader.setUniform1f("uNodeSpacing", node.geometryNode.estimatedSpacing);
-      // shader.setUniform1f("uPCIndex", i);
-
       material.uniforms.uVNStart.value = vnStart;
       material.uniforms.uIsLeafNode.value = isLeaf;
       material.uniforms.modelMatrix.value = world;
@@ -232,57 +95,16 @@ class Group extends BasicGroup {
       material.uniforms.uNodeSpacing.value = node.geometryNode.estimatedSpacing;
       material.uniforms.uPCIndex.value = i;
       material.uniformsNeedUpdate = true;
-      // nodeMaterial.defines = {
-      //   ...nodeMaterial.defines,
-      //   num_clipplanes
-      // }
-      // nodeMaterial.needsUpdate = true;
-
-      // var geometry = node.geometryNode.geometry;
-      // if (!this.meshes.has(geometry)) {
-      //   var mesh = this.createMesh(geometry, nodeMaterial);
-      //   this.meshes.set(geometry, mesh);
-      //   // this.add(mesh);
-      //   console.log('new mesh', mesh, 'for', node);
-      // } else {
-      //   var mesh = this.meshes.get(geometry);
-      //   this.updateMesh(mesh, geometry);
-      //   console.log('update mesh', mesh, 'for', node);
-      // }
-
-      // var geometry = node.geometryNode.geometry;
-      // var webglBuffer = null;
-      // if (!this.buffers.has(geometry)) {
-      //   webglBuffer = this.createBuffer(gl, geometry);
-      //   this.buffers.set(geometry, webglBuffer);
-      // }
-      // else {
-      //   webglBuffer = this.buffers.get(geometry);
-      //   for (var attributeName in geometry.attributes) {
-      //     var attribute = geometry.attributes[attributeName];
-      //     if (attribute.version > webglBuffer.vbos.get(attributeName).version) {
-      //       this.updateBuffer(gl, geometry);
-      //     }
-      //   }
-      // }
-
-      // gl.bindVertexArray(webglBuffer.vao);
-      // gl.drawArrays(gl.POINTS, 0, webglBuffer.numElements);
     }
-
-    // gl.bindVertexArray(null);
   }
 
-  renderOctree(renderer, octree, nodes, camera) {
+  prepareOcttree(renderer, octree, nodes, camera) {
     var gl = renderer.getContext();
     var material = octree.material;
-    var view = camera.matrixWorldInverse;
     var viewInv = camera.matrixWorld;
     var proj = camera.projectionMatrix;
-    var projInv = proj.clone().invert();
 
     var visibilityTextureData = null;
-    var currentTextureBindingPoint = 0;
 
     if (material.pointSizeType === PointSizeType.ADAPTIVE || material.pointColorType === PointColorType.LOD) {
       visibilityTextureData = octree.computeVisibilityTextureData(nodes, camera);
@@ -290,18 +112,6 @@ class Group extends BasicGroup {
       var vnt = material.visibleNodesTexture;
       vnt.image.data.set(visibilityTextureData.data);
       vnt.needsUpdate = true;
-    }
-
-    var shader = null;
-
-    if (!this.shaders.has(material)) {
-      console.log('new shader');
-      shader = new Shader(gl, "pointcloud", material.vertexShader, material.fragmentShader);
-      this.shaders.set(material, shader);
-    }
-    else {
-      console.log('found shader');
-      shader = this.shaders.get(material);
     }
 
     for (var uniformName of Object.keys(material.uniforms)) {
@@ -348,18 +158,13 @@ class Group extends BasicGroup {
     }
 
     const clippingPlanesAsVec4Array = material.clippingPlanes ? material.clippingPlanes.map(x => new THREE.Vector4(x.normal.x, x.normal.y, x.normal.z, x.constant)) : [];
-    console.log('a',material.uniforms );
     material.uniforms.projectionMatrix.value.copy(proj);
-    // material.uniforms.viewMatrix.value.copy(view);
     material.uniforms.uViewInv.value.copy(viewInv);
-    // material.uniforms.uProjInv.value.copy(projInv);
-    console.log('ab');
     material.uniforms.clipPlanes.value = clippingPlanesAsVec4Array;
     material.uniforms.fov.value = Math.PI * camera.fov / 180;
     material.uniforms.near.value = camera.near;
     material.uniforms.far.value = camera.far;
     material.uniforms.size.value = material.size;
-    console.log('b');
     material.uniforms.uOctreeSpacing.value = material.spacing;
     material.uniforms.uColor.value = material.color;
     material.uniforms.uOpacity.value = material.opacity;
@@ -367,107 +172,18 @@ class Group extends BasicGroup {
     material.uniforms.intensityRange.value = material.intensityRange;
     material.uniforms.intensityGamma.value = material.intensityGamma;
     material.uniforms.intensityContrast.value = material.intensityContrast;
-    console.log('c');
     material.uniforms.intensityBrightness.value = material.intensityBrightness;
     material.uniforms.rgbGamma.value = material.rgbGamma;
-    // material.uniforms.rgbContrast.value = material.rgbContrast;
     material.uniforms.rgbBrightness.value = material.rgbBrightness;
     material.uniforms.uTransition.value = material.transition;
     material.uniforms.wRGB.value = material.weightRGB;
-    console.log('d');
     material.uniforms.wIntensity.value = material.weightIntensity;
     material.uniforms.wElevation.value = material.weightElevation;
     material.uniforms.wClassification.value = material.weightClassification;
     material.uniforms.wReturnNumber.value = material.weightReturnNumber;
     material.uniforms.wSourceID.value = material.weightSourceID;
     material.uniforms.logDepthBufFC.value = renderer.capabilities.logarithmicDepthBuffer ? 2.0 / (Math.log(camera.far + 1.0) / Math.LN2) : undefined;
-    console.log('e');
     material.uniformsNeedUpdate = true;
-    // material.uniforms.clipPlanes.value = clippingPlanesAsVec4Array;
-
-    /*
-    gl.useProgram(shader.program);
-
-    if (material.opacity < 1.0) {
-      gl.enable(gl.BLEND);
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-      gl.depthMask(false);
-      gl.disable(gl.DEPTH_TEST);
-    }
-    else {
-      gl.disable(gl.BLEND);
-      gl.depthMask(true);
-      gl.enable(gl.DEPTH_TEST);
-    }
-
-    //Update shader uniforms
-    shader.setUniformMatrix4("projectionMatrix", proj);
-    shader.setUniformMatrix4("viewMatrix", view);
-    shader.setUniformMatrix4("uViewInv", viewInv);
-    shader.setUniformMatrix4("uProjInv", projInv);
-
-    var screenWidth = material.screenWidth;
-    var screenHeight = material.screenHeight;
-
-    shader.setUniform1f("uScreenWidth", screenWidth);
-    shader.setUniform1f("uScreenHeight", screenHeight);
-    shader.setUniform1f("fov", Math.PI * camera.fov / 180);
-    shader.setUniform1f("near", camera.near);
-    shader.setUniform1f("far", camera.far);
-
-    //Set log
-    if (renderer.capabilities.logarithmicDepthBuffer) {
-      shader.setUniform("logDepthBufFC", 2.0 / (Math.log(camera.far + 1.0) / Math.LN2));
-    }
-
-
-    shader.setUniform1f("size", material.size);
-    shader.setUniform1f("maxSize", material.uniforms.maxSize.value);
-    shader.setUniform1f("minSize", material.uniforms.minSize.value);
-    shader.setUniform1f("uOctreeSpacing", material.spacing);
-    shader.setUniform("uOctreeSize", material.uniforms.octreeSize.value);
-    shader.setUniform3f("uColor", material.color.toArray());
-    shader.setUniform1f("uOpacity", material.opacity);
-    shader.setUniform2f("elevationRange", material.elevationRange);
-    shader.setUniform2f("intensityRange", material.intensityRange);
-    shader.setUniform1f("intensityGamma", material.intensityGamma);
-    shader.setUniform1f("intensityContrast", material.intensityContrast);
-    shader.setUniform1f("intensityBrightness", material.intensityBrightness);
-    shader.setUniform1f("rgbGamma", material.rgbGamma);
-    shader.setUniform1f("rgbContrast", material.rgbContrast);
-    shader.setUniform1f("rgbBrightness", material.rgbBrightness);
-    shader.setUniform1f("uTransition", material.transition);
-    shader.setUniform1f("wRGB", material.weightRGB);
-    shader.setUniform1f("wIntensity", material.weightIntensity);
-    shader.setUniform1f("wElevation", material.weightElevation);
-    shader.setUniform1f("wClassification", material.weightClassification);
-    shader.setUniform1f("wReturnNumber", material.weightReturnNumber);
-    shader.setUniform1f("wSourceID", material.weightSourceID);
-
-    var vnWebGLTexture = this.textures.get(material.visibleNodesTexture);
-    shader.setUniform1i("visibleNodesTexture", currentTextureBindingPoint);
-    gl.activeTexture(gl.TEXTURE0 + currentTextureBindingPoint);
-    gl.bindTexture(vnWebGLTexture.target, vnWebGLTexture.id);
-    currentTextureBindingPoint++;
-
-    var gradientTexture = this.textures.get(material.gradientTexture);
-    shader.setUniform1i("gradient", currentTextureBindingPoint);
-    gl.activeTexture(gl.TEXTURE0 + currentTextureBindingPoint);
-    gl.bindTexture(gradientTexture.target, gradientTexture.id);
-    currentTextureBindingPoint++;
-
-    var classificationTexture = this.textures.get(material.classificationTexture);
-    shader.setUniform1i("classificationLUT", currentTextureBindingPoint);
-    gl.activeTexture(gl.TEXTURE0 + currentTextureBindingPoint);
-    gl.bindTexture(classificationTexture.target, classificationTexture.id);
-    currentTextureBindingPoint++;
-    */
-
-    // this.renderNodes(renderer, octree, nodes, visibilityTextureData, camera, shader);
-
-    // gl.activeTexture(gl.TEXTURE2);
-    // gl.bindTexture(gl.TEXTURE_2D, null);
-    // gl.activeTexture(gl.TEXTURE0);
   }
 };
 
