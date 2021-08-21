@@ -31,8 +31,6 @@ export {
 
 export {Gradients} from "./Gradients.js";
 export {Points} from "./Points.js";
-export {WebGLTexture} from "./WebGLTexture.js";
-export {WebGLBuffer} from "./WebGLBuffer.js";
 export {Shaders} from "./Shaders.js";
 
 export {DEM} from "./pointcloud/DEM.js";

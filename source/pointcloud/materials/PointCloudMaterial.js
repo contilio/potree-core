@@ -79,7 +79,7 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 			visibleNodes: {type: "t", value: this.visibleNodesTexture},
 			pcIndex: {type: "f", value: 0},
 			gradient: {type: "t", value: this.gradientTexture},
-			classificationLUT: {type: "t", value: this.classificationTexture},
+			classificationLUT: {type: "t", value: null },
 			diffuse: {type: "fv", value: [1, 1, 1]},
 			transition: {type: "f", value: 0.5},
 			intensityRange: {type: "fv", value: [0, 65000]},
@@ -896,6 +896,7 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 		}
 		var texture = new THREE.DataTexture(data, width, height, THREE.RGBAFormat);
 		texture.magFilter = THREE.NearestFilter;
+		texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
 		texture.needsUpdate = true;
 		return texture;
 	}

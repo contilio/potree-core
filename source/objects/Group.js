@@ -8,7 +8,6 @@ import { PointCloudOctreeNode } from "../pointcloud/PointCloudOctree.js";
 import { PointCloudArena4DNode } from "../pointcloud/PointCloudArena4D.js";
 import { PointSizeType, PointColorType } from "../Potree.js";
 import { Global } from "../Global.js";
-import { WebGLTexture } from "../WebGLTexture.js";
 
 class Group extends BasicGroup {
   constructor() {
@@ -112,26 +111,6 @@ class Group extends BasicGroup {
       var vnt = material.visibleNodesTexture;
       vnt.image.data.set(visibilityTextureData.data);
       vnt.needsUpdate = true;
-    }
-
-    for (var uniformName of Object.keys(material.uniforms)) {
-      var uniform = material.uniforms[uniformName];
-
-      if (uniform.type == "t") {
-        var texture = uniform.value;
-
-        if (!texture) {
-          continue;
-        }
-
-        if (!this.textures.has(texture)) {
-          var webglTexture = new WebGLTexture(gl, texture);
-          this.textures.set(texture, webglTexture);
-        }
-
-        var webGLTexture = this.textures.get(texture);
-        webGLTexture.update();
-      }
     }
 
     // Clip planes
