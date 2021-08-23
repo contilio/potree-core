@@ -4,10 +4,7 @@ import * as THREE from 'three';
 
 import { BasicGroup } from "./BasicGroup.js";
 import { PointCloudTree } from "../pointcloud/PointCloudTree.js";
-import { PointCloudOctreeNode } from "../pointcloud/PointCloudOctree.js";
-import { PointCloudArena4DNode } from "../pointcloud/PointCloudArena4D.js";
 import { PointSizeType, PointColorType } from "../Potree.js";
-import { Global } from "../Global.js";
 
 class Group extends BasicGroup {
   constructor() {
@@ -54,51 +51,7 @@ class Group extends BasicGroup {
     return result;
   }
 
-  renderNodes(renderer, octree, nodes, visibilityTextureData, camera, shader) {
-    var material = octree.material;
-    var view = camera.matrixWorldInverse;
-
-    var worldView = new THREE.Matrix4();
-
-    for (var node of nodes) {
-      if (Global.debug.allowedNodes !== undefined) {
-        if (!Global.debug.allowedNodes.includes(node.name)) {
-          continue;
-        }
-      }
-
-      var world = node.sceneNode.matrixWorld;
-      worldView.multiplyMatrices(view, world);
-
-      var vnStart = undefined;
-      if (visibilityTextureData) {
-        vnStart = visibilityTextureData.offsets.get(node);
-      } else {
-      }
-
-      var level = node.getLevel();
-
-      var isLeaf;
-      if (node instanceof PointCloudOctreeNode) {
-        isLeaf = Object.keys(node.children).length === 0;
-      }
-      else if (node instanceof PointCloudArena4DNode) {
-        isLeaf = node.geometryNode.isLeaf;
-      }
-
-      material.uniforms.uVNStart.value = vnStart;
-      material.uniforms.uIsLeafNode.value = isLeaf;
-      material.uniforms.modelMatrix.value = world;
-      material.uniforms.modelViewMatrix.value = worldView;
-      material.uniforms.uLevel.value = level;
-      material.uniforms.uNodeSpacing.value = node.geometryNode.estimatedSpacing;
-      material.uniforms.uPCIndex.value = i;
-      material.uniformsNeedUpdate = true;
-    }
-  }
-
   prepareOcttree(renderer, octree, nodes, camera) {
-    var gl = renderer.getContext();
     var material = octree.material;
     var viewInv = camera.matrixWorld;
     var proj = camera.projectionMatrix;

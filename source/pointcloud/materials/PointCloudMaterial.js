@@ -77,7 +77,6 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 			bbSize: {type: "fv", value: [0, 0, 0]},
 			elevationRange: {type: "2fv", value: [0, 0]},
 			visibleNodes: {type: "t", value: this.visibleNodesTexture},
-			pcIndex: {type: "f", value: 0},
 			gradient: {type: "t", value: this.gradientTexture},
 			classificationLUT: {type: "t", value: null },
 			diffuse: {type: "fv", value: [1, 1, 1]},
@@ -95,7 +94,8 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 			wClassification: {type: "f", value: 0},
 			wReturnNumber: {type: "f", value: 0},
 			wSourceID: {type: "f", value: 0},
-			logDepthBufFC: {type: "f", value: 0}
+			logDepthBufFC: {type: "f", value: 0},
+			uPCIndex: { value: 0.0 }
 		};
 
 		this.classification = Classification.DEFAULT;
@@ -134,6 +134,7 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 	updateMaterial()
 	{
 		this.defines = this.getDefines();
+		console.log(this.defines);
 
 		if(this.opacity === 1.0)
 		{
@@ -165,6 +166,7 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 
 	onBeforeCompile(shader, renderer)
 	{
+		console.log('compile', shader);
 		if(renderer.capabilities.logarithmicDepthBuffer)
 		{
 			this.defines = { ...this.defines, USE_LOGDEPTHBUF: true, USE_LOGDEPTHBUF_EXT: true, EPSILON: 1e-6 };

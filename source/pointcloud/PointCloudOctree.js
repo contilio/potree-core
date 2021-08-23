@@ -194,8 +194,7 @@ class PointCloudOctree extends PointCloudTree
 		sceneNode.frustumCulled = true;
 		sceneNode.onBeforeRender = (renderer, scene, camera, geometry, material, group) =>
 		{
-			// console.log('onBeforeRender', sceneNode);
-			var vnStart = undefined;
+			var vnStart = null;
 			if(this.visibleNodeTextureOffsets)
 			{
 				vnStart = this.visibleNodeTextureOffsets.get(node);
@@ -206,37 +205,8 @@ class PointCloudOctree extends PointCloudTree
 	
 			material.uniforms.level.value = level;
 			material.uniforms.vnStart.value = vnStart;
-			material.uniforms.pcIndex.value = pcIndex;
+			material.uniforms.uPCIndex.value = pcIndex;
 			this.updateMaterial(material, camera, renderer);
-
-			// if(material.program)
-			// {
-			// 	_this.getContext().useProgram(material.program.program);
-
-			// 	if(material.program.getUniforms().map.level)
-			// 	{
-			// 		var level = geometryNode.getLevel();
-			// 		material.uniforms.level.value = level;
-			// 		material.program.getUniforms().map.level.setValue(_this.getContext(), level);
-			// 	}
-
-			// 	if(this.visibleNodeTextureOffsets && material.program.getUniforms().map.vnStart)
-			// 	{
-			// 		var vnStart = this.visibleNodeTextureOffsets.get(node);
-			// 		material.uniforms.vnStart.value = vnStart;
-			// 		material.program.getUniforms().map.vnStart.setValue(_this.getContext(), vnStart);
-			// 	}
-
-			// 	if(material.program.getUniforms().map.pcIndex)
-			// 	{
-			// 		var i = node.pcIndex ? node.pcIndex : this.visibleNodes.indexOf(node);
-			// 		material.uniforms.pcIndex.value = i;
-			// 		material.program.getUniforms().map.pcIndex.setValue(_this.getContext(), i);
-			// 	}
-			// }
-			// Since we are handling rendering our selves, instruct ThreeJS to not
-			// draw any of the points during 'regular' rendering
-			// geometry.setDrawRange(0, 0);
 		};
 
 		node.geometryNode = geometryNode;
@@ -324,13 +294,6 @@ class PointCloudOctree extends PointCloudTree
 		material.uniforms.octreeSize.value = octreeSize;
 
 		material.uniformsNeedUpdate  = true;
-
-		// material.screenWidth = renderer.domElement.clientWidth;
-		// material.screenHeight = renderer.domElement.clientHeight;
-		// material.spacing = this.pcoGeometry.spacing * Math.max(this.scale.x, this.scale.y, this.scale.z);
-		// material.near = camera.near;
-		// material.far = camera.far;
-		// material.uniforms.octreeSize.value = this.pcoGeometry.boundingBox.getSize(new THREE.Vector3()).x;
 	}
 
 	computeVisibilityTextureData(nodes, camera)
