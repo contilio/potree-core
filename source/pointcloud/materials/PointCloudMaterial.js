@@ -134,7 +134,6 @@ class PointCloudMaterial extends THREE.ShaderMaterial
 	updateMaterial()
 	{
 		this.defines = this.getDefines();
-		console.log(this.defines);
 
 		if(this.opacity === 1.0)
 		{
