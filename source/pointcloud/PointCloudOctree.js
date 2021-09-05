@@ -368,9 +368,6 @@ class PointCloudOctree extends PointCloudTree
 				}
 			}
 
-			var spacing = node.geometryNode.estimatedSpacing;
-			var isLeafNode;
-
 			data[i * 4 + 0] = 0;
 			data[i * 4 + 1] = 0;
 			data[i * 4 + 2] = 0;
@@ -726,7 +723,6 @@ class PointCloudOctree extends PointCloudTree
 	 */
 	pick(viewer, camera, ray, params = {})
 	{
-
 		var renderer = viewer.renderer;
 		var pRenderer = viewer.pRenderer;
 
