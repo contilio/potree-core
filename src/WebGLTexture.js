@@ -37,7 +37,6 @@ function paramThreeToGL(gl, p)
 	}
 
 	if(p === THREE.AlphaFormat) return gl.ALPHA;
-	if(p === THREE.RGBFormat) return gl.RGB;
 	if(p === THREE.RGBAFormat) return gl.RGBA;
 	if(p === THREE.LuminanceFormat) return gl.LUMINANCE;
 	if(p === THREE.LuminanceAlphaFormat) return gl.LUMINANCE_ALPHA;

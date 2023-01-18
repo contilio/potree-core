@@ -513,14 +513,14 @@ class PointCloudMaterial extends THREE.RawShaderMaterial {
 		const width = 256;
 		const height = 256;
 		const size = width * height;
-		const data = new Uint8Array(3 * size);
+		const data = new Uint8Array(4 * size);
 
 		hiddenPointSourceIDs.forEach(id => {
-			const n = id * 3;
+			const n = id * 4;
 			data[n] = 255; // 255 here => texture2d(...).r == 1.0 in GLSL
 		});
 
-		const texture = new THREE.DataTexture(data, width, height, THREE.RGBFormat);
+		const texture = new THREE.DataTexture(data, width, height, THREE.RGBAFormat);
 		texture.magFilter = THREE.NearestFilter;
 		texture.needsUpdate = true;
 
@@ -539,14 +539,14 @@ class PointCloudMaterial extends THREE.RawShaderMaterial {
 		const width = 256;
 		const height = 256;
 		const size = width * height;
-		const data = new Uint8Array(3 * size);
+		const data = new Uint8Array(4 * size);
 
 		selectedPointSourceIDs.forEach(id => {
-			const n = id * 3;
+			const n = id * 4;
 			data[n] = 255; // 255 here => texture2d(...).r == 1.0 in GLSL
 		});
 
-		const texture = new THREE.DataTexture(data, width, height, THREE.RGBFormat);
+		const texture = new THREE.DataTexture(data, width, height, THREE.RGBAFormat);
 		texture.magFilter = THREE.NearestFilter;
 		texture.needsUpdate = true;
 
