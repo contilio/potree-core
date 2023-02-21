@@ -6,7 +6,6 @@ import { HelperUtils } from "../../utils/HelperUtils.js";
 import { Gradients } from "../../Gradients.js";
 import { Shaders } from "../../Shaders.js";
 import { TreeType, PointColorType, PointSizeType, PointShape, Classification, PointSelectionType } from "../../Potree.js";
-import { PointCloudOctree } from '../PointCloudOctree.js';
 
 class PointCloudMaterial extends THREE.RawShaderMaterial {
 
@@ -30,7 +29,6 @@ class PointCloudMaterial extends THREE.RawShaderMaterial {
 			// set to true to instruct ThreeJS to upload them. See also
 			// https://github.com/mrdoob/three.js/issues/9870#issuecomment-368750182.
 
-			// Remove the cast to any after updating to Three.JS >= r113
 			material.uniformsNeedUpdate = true;
 		};
 	}
@@ -121,6 +119,8 @@ class PointCloudMaterial extends THREE.RawShaderMaterial {
 			clipPolygons: { type: "3fv", value: [] },
 			clipPolygonVCount: { type: "iv", value: [] },
 			clipPolygonVP: { type: "Matrix4fv", value: [] },
+
+			uClippingElevations: { type: "fv", value: [0.0, 0.0, 0.0] }, // top, bottom, enabled
 
 			visibleNodes: { type: "t", value: this.visibleNodesTexture },
 			pcIndex: { type: "f", value: 0 },
@@ -378,6 +378,19 @@ class PointCloudMaterial extends THREE.RawShaderMaterial {
 		var doUpdate = (this.clipPolygons.length !== clipPolygons.length);
 		if (doUpdate) {
 			this.updateShaderSource();
+		}
+	}
+
+	get clippingElevations() {
+		return this.uniforms.uClippingElevations.value.slice(0, 2);
+	}
+	set clippingElevations(value) {
+		value ||= [];
+
+		if (value.length) {
+			this.uniforms.uClippingElevations.value = [...value.slice(0, 2), 1.0];
+		} else {
+			this.uniforms.uClippingElevations.value = [0.0, 0.0, 0.0];
 		}
 	}
 

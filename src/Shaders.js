@@ -148,6 +148,7 @@ bool isClipped(vec3 point) {
 #endif
 
 uniform vec3 selectedPointSourceIDColor;
+uniform vec3 uClippingElevations;
 
 varying vec3 vColor;
 varying float vLogDepth;
@@ -734,11 +735,11 @@ void doClipping()
 		}
 		else if(!insideAny && clipTask == CLIPTASK_SHOW_INSIDE)
 		{
-			gl_Position = vec4(100.0, 100.0, 100.0, 1.0);
+			vHidden = 1.0;
 		}
 		else if(insideAny && clipTask == CLIPTASK_SHOW_OUTSIDE)
 		{
-			gl_Position = vec4(100.0, 100.0, 100.0, 1.0);
+			vHidden = 1.0;
 		}
 	}
 	else if(clipMethod == CLIPMETHOD_INSIDE_ALL)
@@ -749,11 +750,11 @@ void doClipping()
 		}
 		else if(!insideAll && clipTask == CLIPTASK_SHOW_INSIDE)
 		{
-			gl_Position = vec4(100.0, 100.0, 100.0, 1.0);
+			vHidden = 1.0;
 		}
 		else if(insideAll && clipTask == CLIPTASK_SHOW_OUTSIDE)
 		{
-			gl_Position = vec4(100.0, 100.0, 100.0, 1.0);
+			vHidden = 1.0;
 		}
 	}
 }
@@ -821,9 +822,21 @@ void main()
 	#endif
 
 	//CLIPPING
-	vec4 clipPosition = modelMatrix * vec4( position, 1.0 );
+
+	vec4 clipPosition = modelMatrix * vec4( position, 1.0 ); // World position of point
+
+	// Clipping elevations
+	if (uClippingElevations[2] > 0.0) {
+		if (clipPosition.y > uClippingElevations[0] || clipPosition.y < uClippingElevations[1]) {
+			vHidden = 1.0;
+			return;
+		}
+	}
+
+	// Clipping planes (doesn't seem to work as expected)
 	if (isClipped(clipPosition.xyz)) {
-		gl_Position = vec4(100.0, 100.0, 100.0, 1.0); // Outside clip space
+ 		vHidden = 1.0;
+		return;
 	}
 	doClipping();
 

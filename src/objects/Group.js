@@ -213,6 +213,7 @@ class Group extends BasicGroup {
 
       // Clip planes
       if (material.clipping && material.clippingPlanes && material.clippingPlanes.length > 0) {
+
         var planes = material.clippingPlanes;
         var flattenedPlanes = new Array(4 * material.clippingPlanes.length);
         for (var i = 0; i < planes.length; i++) {
@@ -227,6 +228,7 @@ class Group extends BasicGroup {
           throw new Error('Could not find uniform clipPlanes');
         }
         gl.uniform4fv(clipPlanesLoc, flattenedPlanes);
+
       }
 
       //Clip Polygons
@@ -453,6 +455,7 @@ class Group extends BasicGroup {
 
     shader.setUniform1fv("hiddenClassifications", material.hiddenClassifications);
     shader.setUniform3f("selectedPointSourceIDColor", material.selectedPointSourceIDColor);
+    shader.setUniform3f("uClippingElevations", material.uniforms.uClippingElevations.value);
 
     let vnWebGLTexture = this.textures.get(material.visibleNodesTexture);
     shader.setUniform1i("visibleNodesTexture", currentTextureBindingPoint);

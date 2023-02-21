@@ -8,8 +8,8 @@
     "url": "https://github.com/contilio/potree-core.git"
   },
   "scripts": {
-    "build": "webpack",
-    "watch": "webpack --watch",
+    "build": "webpack --mode=production",
+    "watch": "webpack --mode=development --watch",
     "docs": "jsdoc -d docs source",
     "prebump": "yarn version --no-git-tag-version && yarn",
     "bump": "yarn bump:commit && yarn bump:tag && yarn bump:push",
