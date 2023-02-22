@@ -260,6 +260,16 @@ class BasicGroup extends THREE.Mesh {
       return null;
     }
   };
+
+  updateMatrixWorld(force) {
+    const { matrixWorldNeedsUpdate } = this;
+
+    super.updateMatrixWorld(force);
+
+    if (matrixWorldNeedsUpdate || force) {
+      this.dispatchEvent({ type: 'matrixWorldUpdated' });
+    }
+  }
 }
 
 export { BasicGroup };
