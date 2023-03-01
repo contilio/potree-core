@@ -641,7 +641,6 @@ class PointCloudOctree extends PointCloudTree {
 	 * @returns
 	 */
 	pick(renderer, pRenderer, camera, ray, params = {}) {
-
 		performance.mark("pick-start");
 
 		let getVal = (a, b) => a !== undefined ? a : b;
@@ -691,15 +690,12 @@ class PointCloudOctree extends PointCloudTree {
 			pickMaterial.uniforms.maxSize.value = this.material.uniforms.maxSize.value;
 			pickMaterial.classification = this.material.classification;
 
-			if (params.pickClipped) {
-				pickMaterial.clipBoxes = this.material.clipBoxes;
-				if (this.material.clipTask === ClipTask.HIGHLIGHT) {
-					pickMaterial.clipTask = ClipTask.NONE;
-				} else {
-					pickMaterial.clipTask = this.material.clipTask;
-				}
+			pickMaterial.clippingElevations = this.material.clippingElevations;
+			pickMaterial.clipBoxes = this.material.clipBoxes;
+			if (this.material.clipTask === ClipTask.HIGHLIGHT) {
+				pickMaterial.clipTask = ClipTask.NONE;
 			} else {
-				pickMaterial.clipBoxes = [];
+				pickMaterial.clipTask = this.material.clipTask;
 			}
 
 			this.updateMaterial(pickMaterial, nodes, camera, renderer);

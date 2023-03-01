@@ -6,7 +6,6 @@ import { WebGLBuffer } from "../WebGLBuffer.js";
 import { BasicGroup } from "./BasicGroup.js";
 import { PointCloudTree } from "../pointcloud/PointCloudTree.js";
 import { PointCloudOctreeNode } from "../pointcloud/PointCloudOctree.js";
-import { PointCloudArena4DNode } from "../pointcloud/PointCloudArena4D.js";
 import { AttributeLocations, PointSizeType, PointColorType, ClipTask } from "../Potree.js";
 import { Global } from "../Global.js";
 import { Shader } from "../Shader.js";
@@ -194,9 +193,6 @@ class Group extends BasicGroup {
       let isLeaf;
       if (node instanceof PointCloudOctreeNode) {
         isLeaf = Object.keys(node.children).length === 0;
-      }
-      else if (node instanceof PointCloudArena4DNode) {
-        isLeaf = node.geometryNode.isLeaf;
       }
       shader.setUniform("uIsLeafNode", isLeaf);
 

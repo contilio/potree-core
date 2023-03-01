@@ -382,12 +382,12 @@ class PointCloudMaterial extends THREE.RawShaderMaterial {
 	}
 
 	get clippingElevations() {
-		return this.uniforms.uClippingElevations.value.slice(0, 2);
+		return this.uniforms.uClippingElevations.value;
 	}
 	set clippingElevations(value) {
 		value ||= [];
 
-		if (value.length) {
+		if (value.length && value[2] !== 0.0) {
 			this.uniforms.uClippingElevations.value = [...value.slice(0, 2), 1.0];
 		} else {
 			this.uniforms.uClippingElevations.value = [0.0, 0.0, 0.0];

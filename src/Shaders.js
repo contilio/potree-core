@@ -826,7 +826,7 @@ void main()
 	vec4 clipPosition = modelMatrix * vec4( position, 1.0 ); // World position of point
 
 	// Clipping elevations
-	if (uClippingElevations[2] > 0.0) {
+	if (uClippingElevations[2] > 0.5) {
 		if (clipPosition.y > uClippingElevations[0] || clipPosition.y < uClippingElevations[1]) {
 			vHidden = 1.0;
 			return;

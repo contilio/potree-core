@@ -4,7 +4,7 @@ import * as THREE from 'three';
 
 import {POCLoader} from "../../loaders/POCLoader.js";
 import {Global} from "../../Global.js";
-import {PointCloudTree, PointCloudTreeNode} from "../PointCloudTree.js";
+import {PointCloudTreeNode} from "../PointCloudTree.js";
 import {XHRFactory} from "../../XHRFactory.js";
 
 class PointCloudOctreeGeometry

@@ -206,12 +206,7 @@ class BasicGroup extends THREE.Mesh {
 
     let pickParams = {};
 
-    if (params.pickClipped) {
-      pickParams.pickClipped = params.pickClipped;
-    }
-
     pickParams.debug = params.debug;
-
     pickParams.x = pixelPosition.x;
     pickParams.y = renderer.domElement.offsetHeight - pixelPosition.y;
 
