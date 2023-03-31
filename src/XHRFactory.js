@@ -34,7 +34,7 @@ const XHRFactory = {
 		return xhr;
 	},
 
-	fetch: async function(resource) {
+	fetch: async function (resource, options) {
 		const headers = new Headers();
 		if (this.config.customHeaders) {
 			this.config.customHeaders.forEach(function (customHeader) {
@@ -43,12 +43,13 @@ const XHRFactory = {
 				}
 			});
 		}
-		const options = {
+		options = {
 			headers,
-			credentials: XHRFactory.config.withCredentials ? 'include' : 'same-origin'
+			credentials: XHRFactory.config.withCredentials ? 'include' : 'same-origin',
+			...options,
 		};
 		return fetch(resource, options);
 	}
 };
 
-export {XHRFactory};
+export { XHRFactory };
