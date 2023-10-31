@@ -101,29 +101,37 @@ var PointSelectionType =
   COLOR: 1
 };
 
-function loadPointCloud(path, name, callback) {
+function loadPointCloud(url, name, callback) {
   var loaded = function (pointcloud) {
     if (name !== undefined) {
       pointcloud.name = name;
     }
 
-    callback(
-      {
-        type: "pointcloud_loaded",
-        pointcloud: pointcloud
-      });
+    callback({
+      type: "pointcloud_loaded",
+      pointcloud: pointcloud,
+      url,
+    });
   };
 
-  //Potree point cloud
-  if (path.indexOf("cloud.js") > 0) {
-    POCLoader.load(path, function (geometry) {
+  var failed = function () {
+    callback({
+      type: "pointcloud_load_error",
+      pointcloud: null,
+      url
+    });
+  };
+
+  if (url.indexOf("cloud.js") > 0) {
+    POCLoader.load(url, function (geometry) {
       if (geometry !== undefined) {
         loaded(new PointCloudOctree(geometry));
+      } else {
+        failed();
       }
     });
-  }
-  else {
-    throw new Error("Potree: Failed to load point cloud from URL " + path);
+  } else {
+    failed();
   }
 }
 
