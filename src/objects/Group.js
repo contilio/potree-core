@@ -452,6 +452,7 @@ class Group extends BasicGroup {
     shader.setUniform1fv("hiddenClassifications", material.hiddenClassifications);
     shader.setUniform3f("selectedPointSourceIDColor", material.selectedPointSourceIDColor);
     shader.setUniform3f("uClippingElevations", material.uniforms.uClippingElevations.value);
+    shader.setUniformMatrix3("uClippingBox", material.uniforms.uClippingBox.value);
 
     let vnWebGLTexture = this.textures.get(material.visibleNodesTexture);
     shader.setUniform1i("visibleNodesTexture", currentTextureBindingPoint);

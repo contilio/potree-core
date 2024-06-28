@@ -7,6 +7,11 @@ import { Gradients } from "../../Gradients.js";
 import { Shaders } from "../../Shaders.js";
 import { TreeType, PointColorType, PointSizeType, PointShape, Classification, PointSelectionType } from "../../Potree.js";
 
+/**
+ * Shader only clips BIM if min and max are different
+ */
+const nullClippingBox = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+
 class PointCloudMaterial extends THREE.RawShaderMaterial {
 
 	static makeOnBeforeRender(octree, node, pcIndex) {
@@ -121,6 +126,7 @@ class PointCloudMaterial extends THREE.RawShaderMaterial {
 			clipPolygonVP: { type: "Matrix4fv", value: [] },
 
 			uClippingElevations: { type: "fv", value: [0.0, 0.0, 0.0] }, // top, bottom, enabled
+			uClippingBox: { type: "Matrix3fv", value: new THREE.Matrix3().fromArray([0, 0, 0, 0, 0, 0, 0, 0, 0]) },
 
 			visibleNodes: { type: "t", value: this.visibleNodesTexture },
 			pcIndex: { type: "f", value: 0 },
@@ -391,6 +397,24 @@ class PointCloudMaterial extends THREE.RawShaderMaterial {
 			this.uniforms.uClippingElevations.value = [...value.slice(0, 2), 1.0];
 		} else {
 			this.uniforms.uClippingElevations.value = [0.0, 0.0, 0.0];
+		}
+	}
+
+	get clippingBox() {
+		const { elements } = this.uniforms.uClippingBox.value;
+		return new THREE.Box3(
+			new THREE.Vector3(...elements.slice(0, 3)),
+			new THREE.Vector3(...elements.slice(3, 3))
+		);
+	}
+	set clippingBox(value) {
+		value ??= nullClippingBox;
+		if (!this.clippingBox.equals(value)) {
+			this.uniforms.uClippingBox.value = new THREE.Matrix3().fromArray([
+				...value.min.toArray(),
+				...value.max.toArray(),
+				0, 0, 0
+			]);
 		}
 	}
 

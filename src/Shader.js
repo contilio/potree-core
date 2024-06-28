@@ -139,6 +139,18 @@ class Shader {
 		gl.uniformMatrix4fv(location, false, tmp);
 	}
 
+	setUniformMatrix3(name, value) {
+		const gl = this.gl;
+		const location = this.uniformLocations[name];
+
+		if (location == null) {
+			return;
+		}
+
+		let tmp = new Float32Array(value.elements);
+		gl.uniformMatrix3fv(location, false, tmp);
+	}
+
 	setUniformMatrix4v(name, values) {
 		const gl = this.gl;
 		const location = this.uniformLocations[`${name}[0]`];
@@ -225,10 +237,13 @@ class Shader {
 
 	setUniform(name, value) {
 
-		if (value.constructor === THREE.Matrix4) {
+		if (value instanceof THREE.Matrix3) {
+			this.setUniformMatrix3(name, value);
+		}
+		if (value instanceof THREE.Matrix4) {
 			this.setUniformMatrix4(name, value);
 		}
-		else if (value.constructor === THREE.Color) {
+		else if (value instanceof THREE.Color) {
 			this.setUniform3f(name, value);
 		}
 		else if (typeof value === "number") {

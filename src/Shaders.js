@@ -149,6 +149,7 @@ bool isClipped(vec3 point) {
 
 uniform vec3 selectedPointSourceIDColor;
 uniform vec3 uClippingElevations;
+uniform mat3 uClippingBox;
 
 varying vec3 vColor;
 varying float vLogDepth;
@@ -833,11 +834,26 @@ void main()
 		}
 	}
 
+	// Clipping box (not to be confused with Potree's own clipBox)
+	if (all(equal(uClippingBox[0], uClippingBox[1])) == false) {
+		vec3 p = clipPosition.xyz;
+		vec3 mn = uClippingBox[0];
+		vec3 mx = uClippingBox[1];
+
+		vec3 s = step(mn, p) - step(mx, p);
+		
+		if ((s.x * s.y * s.z) < 0.5) {
+			vHidden = 1.0;
+			return;
+		}
+	}
+
 	// Clipping planes (doesn't seem to work as expected)
 	if (isClipped(clipPosition.xyz)) {
  		vHidden = 1.0;
 		return;
 	}
+	
 	doClipping();
 
 	#if defined num_clipspheres && num_clipspheres > 0
