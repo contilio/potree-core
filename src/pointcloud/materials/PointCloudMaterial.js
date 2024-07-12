@@ -403,8 +403,8 @@ class PointCloudMaterial extends THREE.RawShaderMaterial {
 	get clippingBox() {
 		const { elements } = this.uniforms.uClippingBox.value;
 		return new THREE.Box3(
-			new THREE.Vector3(...elements.slice(0, 3)),
-			new THREE.Vector3(...elements.slice(3, 3))
+			new THREE.Vector3(elements[0], elements[1], elements[2]),
+			new THREE.Vector3(elements[3], elements[4], elements[5])
 		);
 	}
 	set clippingBox(value) {

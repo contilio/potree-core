@@ -692,6 +692,7 @@ class PointCloudOctree extends PointCloudTree {
 
 			pickMaterial.clippingElevations = this.material.clippingElevations;
 			pickMaterial.clipBoxes = this.material.clipBoxes;
+			pickMaterial.clippingBox = this.material.clippingBox;
 			if (this.material.clipTask === ClipTask.HIGHLIGHT) {
 				pickMaterial.clipTask = ClipTask.NONE;
 			} else {
